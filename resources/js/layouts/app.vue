@@ -1,3 +1,4 @@
+<!-- resources/js/layouts/app.vue -->
 <template>
     <div class="flex">
       <Sidebar />
