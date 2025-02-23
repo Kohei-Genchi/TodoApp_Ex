@@ -2,46 +2,49 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\TodoRequest;
+use App\Models\Category;
 use App\Models\Todo;
 use Illuminate\Http\Request;
 
 class TodoController extends Controller
 {
-    // Get all todos
-    public function index()
-    {
-        return Todo::orderBy('created_at', 'desc')->get();
-    }
+  public function index()
+  {
+    $todos = Todo::with('category')->get();
+    $categories = Category::all();
 
-    // Create new todo
-    public function store(Request $request)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-        ]);
+    return view('index', compact('todos', 'categories'));
+  }
 
-        $todo = Todo::create([
-            'title' => $request->title,
-            'completed' => false,
-        ]);
+  public function search(Request $request)
+  {
+    $todos = Todo::with('category')->categorySearch($request->category_id)->keywordSearch($request->keyword)->get();
+    $categories = Category::all();
 
-        return $todo;
-    }
+    return view('index', compact('todos', 'categories'));
+  }
 
-    // Update todo status
-    public function update(Request $request, Todo $todo)
-    {
-        $todo->update([
-            'completed' => $request->completed
-        ]);
+  public function store(TodoRequest $request)
+  {
+    $todo = $request->only(['category_id', 'content']);
+    Todo::create($todo);
 
-        return $todo;
-    }
+    return redirect('/')->with('message', 'Todoを作成しました');
+  }
 
-    // Delete todo
-    public function destroy(Todo $todo)
-    {
-        $todo->delete();
-        return response()->json(['message' => 'Todo deleted']);
-    }
+  public function update(TodoRequest $request)
+  {
+    $todo = $request->only(['content']);
+    Todo::find($request->id)->update($todo);
+
+    return redirect('/')->with('message', 'Todoを更新しました');
+  }
+
+  public function destroy(Request $request)
+  {
+    Todo::find($request->todo_id)->delete();
+
+    return redirect('/')->with('message', 'Todoを削除しました');
+  }
 }
