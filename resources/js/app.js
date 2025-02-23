@@ -8,22 +8,22 @@ import { createRouter, createWebHistory } from 'vue-router';
 import axios from 'axios';
 import TodoList from '@/components/TodoList.vue';
 
-// Define routes (this was missing)
-const routes = [
-  {
-    path: '/',
-    component: TodoList
-  }
-];
+
+// const routes = [
+//   {
+//     path: '/',
+//     component: TodoList
+//   }
+// ];
 
 
-const router = createRouter({
-    history: createWebHistory(),
-    routes,
-  });
+// const router = createRouter({
+//     history: createWebHistory(),
+//     routes,
+//   });
 
   const app = createApp(App)
-    .use(router);
+    // .use(router);
 
   app.config.globalProperties.$axios = axios;
 
