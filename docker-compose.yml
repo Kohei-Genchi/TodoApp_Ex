@@ -14,6 +14,18 @@ services:
       - APP_ENV=local
     networks:
       - app-network
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: my-laravel-scheduler
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - ./:/var/www
+    networks:
+      - app-network
+    command: ["/bin/sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"]
 
   nginx:
     image: nginx:alpine
