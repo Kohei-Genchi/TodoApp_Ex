@@ -17,8 +17,8 @@
                     </a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
-                        <button type="submit" class="text-sm text-gray-400 hover:text-white">
-                            ログアウト
+                        <button type="submit" class="text-lg text-gray-400 hover:text-white">
+                            🚪
                         </button>
                     </form>
                 </div>
@@ -29,10 +29,10 @@
                 <span class="font-bold">ゲスト</span>
                 <div class="flex space-x-3">
                     <a href="{{ route('login') }}" class="text-sm text-gray-400 hover:text-white">
-                        ログイン
+                        🔑
                     </a>
                     <a href="{{ route('register') }}" class="text-sm text-gray-400 hover:text-white">
-                        登録
+                        📝
                     </a>
                 </div>
             </div>
