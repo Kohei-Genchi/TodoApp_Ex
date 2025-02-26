@@ -50,11 +50,6 @@
                         class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                     タスクを追加
                 </button>
-            @else
-                <a href="{{ route('login') }}"
-                   class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                    ログインして始める
-                </a>
             @endauth
         </div>
 
@@ -68,7 +63,7 @@
         </div>
 
         @auth
-
+        {{-- モーダルウィンドウについて --}}
             <div id="task-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
                 <div class="absolute inset-0 bg-black bg-opacity-30" onclick="closeTaskModal()"></div>
 
@@ -103,6 +98,7 @@
             </div>
 
             <script>
+                // タスクの追加/編集用のモーダルウィンドウを開く機能
                 function openTaskModal(mode, todoId = null, todoData = null) {
                     const modal = document.getElementById('task-modal');
                     const form = document.getElementById('task-form');
@@ -154,7 +150,7 @@
                                 recurrenceEndContainer.classList.add('hidden');
                             }
 
-                            // Update category select border
+                            // カテゴリに基づいて選択ボーダーを更新
                             const categorySelect = document.getElementById('category_id');
                             if (todoData.category_id) {
                                 const selectedOption = Array.from(categorySelect.options).find(
@@ -168,7 +164,7 @@
                             }
                         }
                     }
-
+                    //モーダルウィンドウの表示
                     modal.classList.remove('hidden');
                 }
 

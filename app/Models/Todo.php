@@ -16,10 +16,10 @@ class Todo extends Model
         'due_date',
         'due_time',
         'status',
-        'location', // INBOX, TODAY, TEMPLATE, SCHEDULED
+        'location',
         'user_id',
         'category_id',
-        'recurrence_type', // none, daily, weekly, monthly
+        'recurrence_type',
         'recurrence_end_date',
     ];
 
@@ -39,7 +39,7 @@ class Todo extends Model
         return $this->belongsTo(Category::class);
     }
 
-    // Check if the todo is recurring
+
     public function isRecurring(): bool
     {
         return $this->recurrence_type !== 'none';

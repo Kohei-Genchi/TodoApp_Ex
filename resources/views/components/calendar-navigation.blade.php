@@ -1,4 +1,4 @@
-<!-- resources/views/components/calendar-navigation.blade.php -->
+{{-- <!-- resources/views/components/calendar-navigation.blade.php -->
 @props(['currentView' => 'day', 'date' => null])
 
 @php
@@ -138,4 +138,4 @@
         });
     });
 </script>
-@endpush
+@endpush --}}

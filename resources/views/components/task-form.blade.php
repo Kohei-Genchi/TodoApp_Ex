@@ -9,6 +9,7 @@
     <div class="space-y-4">
         <div>
             <label for="title" class="block text-sm font-medium text-gray-700">タスク名<span class="text-red-500">*</span></label>
+            {{-- 「nullセーフ演算子」（?->)を使用して、$todoがnullでない場合のみtitleプロパティにアクセス --}}
             <input type="text" id="title" name="title" required value="{{ $todo?->title }}"
                    class="w-full mt-1 p-2 border rounded focus:ring-blue-500 focus:border-blue-500">
         </div>
@@ -33,6 +34,7 @@
                 @foreach($categories as $category)
                     <option value="{{ $category->id }}"
                             data-color="{{ $category->color }}"
+                            {{-- @selected ディレクティブ：条件が真の場合に "selected" 属性を追加 --}}
                             @selected($todo?->category_id == $category->id)>
                         {{ $category->name }}
                     </option>
@@ -50,7 +52,7 @@
                 <option value="monthly" @selected($todo?->recurrence_type == 'monthly')>毎月</option>
             </select>
         </div>
-
+    {{-- タスクに繰り返しタイプがあり、かつ "none" でない場合にのみ表示（それ以外の場合は "hidden" クラスで非表示） --}}
         <div id="recurrence-end-container" class="{{ $todo?->recurrence_type && $todo?->recurrence_type !== 'none' ? '' : 'hidden' }}">
             <label for="recurrence_end_date" class="block text-sm font-medium text-gray-700">繰り返し終了日</label>
             <input type="date" id="recurrence_end_date" name="recurrence_end_date"

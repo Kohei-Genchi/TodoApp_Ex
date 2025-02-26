@@ -87,7 +87,7 @@
                                 <input type="hidden" name="category_id" value="{{ $template->category_id }}">
                                 <input type="hidden" name="due_date" value="{{ now()->format('Y-m-d') }}">
                                 <button type="submit" class="text-sm text-blue-500 hover:text-blue-700">
-                                    今日のタスクに追加
+                                    本日のタスクに追加
                                 </button>
                             </form>
 

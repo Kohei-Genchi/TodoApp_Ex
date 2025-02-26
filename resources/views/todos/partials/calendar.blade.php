@@ -16,10 +16,12 @@
 
         <div class="grid grid-cols-7 border-t border-l border-gray-200">
             @php
+                //表示月の1日
                 $startMonth = $date->copy()->startOfMonth();
+                //表示月の末日
                 $endMonth = $date->copy()->endOfMonth();
 
-
+                //カレンダー表示の最初の日（通常は月の初日を含む週の日曜日）
                 $firstDayOfView = $startMonth->copy()->startOfWeek();
                 if ($firstDayOfView->month != $startMonth->month) {
 
@@ -27,7 +29,7 @@
                     $firstDayOfView = $startMonth->copy()->subDay();
                 }
 
-
+                //カレンダー表示の最後の日（通常は月の末日を含む週の土曜日）
                 $lastDayOfView = $endMonth->copy()->endOfWeek();
                 if ($lastDayOfView->month != $endMonth->month) {
 
@@ -50,10 +52,12 @@
 
 
                 $startDayOfWeek = $days[0]->dayOfWeek;
+
+                // 月初の前に表示する空白セルの数
                 $emptyBefore = $startDayOfWeek;
 
-
                 $endDayOfWeek = end($days)->dayOfWeek;
+                // 月末の後に表示する空白セルの数
                 $emptyAfter = 6 - $endDayOfWeek;
             @endphp
 
@@ -67,6 +71,7 @@
                 @php
                     $isCurrentMonth = $day->month === $date->month;
                     $isToday = $day->isSameDay($today);
+                    // その日に設定されたタスクのコレクション
                     $dayTodos = $todos->filter(function($todo) use ($day) {
                         return $todo->due_date && $todo->due_date->isSameDay($day);
                     });

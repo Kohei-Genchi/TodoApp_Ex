@@ -84,14 +84,11 @@
 
     <div class="bg-white rounded-lg shadow p-8 text-center">
         <div class="mb-4">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
         </div>
         <h3 class="text-lg font-medium text-gray-900">タスク管理機能へようこそ</h3>
-        <p class="mt-2 text-sm text-gray-500">
-            タスクの作成、編集、管理を開始するには、ログインまたは新規登録してください。
-        </p>
+
         <div class="mt-6 flex justify-center space-x-4">
             <a href="{{ route('login') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 ログイン

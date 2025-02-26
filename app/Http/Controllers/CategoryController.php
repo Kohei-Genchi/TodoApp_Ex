@@ -33,6 +33,7 @@ class CategoryController extends Controller
     // Update an existing category
     public function update(CategoryRequest $request, Category $category): RedirectResponse
     {
+        //Gate::authorize()、CategoryPolicy.phpを参照
         Gate::authorize('update', $category);
         $category->update($request->validated());
 
