@@ -4,7 +4,7 @@
         @include('todos.partials.nav-tabs')
 
 
-        <div class="mb-6 flex justify-between items-center">
+        <div class="mb-2 flex justify-between items-center">
             <div>
                 @if($view === 'calendar')
                     <div class="flex items-center">
@@ -20,28 +20,26 @@
                             </svg>
                         </a>
                     </div>
-                @elseif($view === 'date')
+                    @elseif($view === 'date' || $view === 'today')
                     <div class="flex items-center">
-                        <a href="{{ route('todos.index', ['view' => 'date', 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}" class="mr-2">
+                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}" class="mr-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
-                        <h1 class="text-xl font-semibold">{{ $date->format('Y年n月d日') }}</h1>
-                        <a href="{{ route('todos.index', ['view' => 'date', 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}" class="ml-2">
+                        <h1 class="text-xl font-semibold">{{ $date->format('m月d日') }}({{ ['日', '月', '火', '水', '木', '金', '土'][$date->dayOfWeek] }})</h1>
+                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}" class="ml-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
                         </a>
                     </div>
                 @else
-                <h1 class="text-xl font-semibold">
-                    @if($view === 'inbox')
-                        INBOX
-                    @elseif($view === 'today')
-                        本日のタスク {{ now()->format('Y年n月d日') }}
-                    @endif
-                </h1>
+                    <h1 class="text-xl font-semibold">
+                        @if($view === 'inbox')
+                            INBOX
+                        @endif
+                    </h1>
                 @endif
             </div>
 
