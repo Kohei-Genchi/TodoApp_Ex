@@ -63,7 +63,7 @@
 
 
             @for ($i = 0; $i < $emptyBefore; $i++)
-                <div class="min-h-24 p-1 border-r border-b border-gray-200 bg-gray-50"></div>
+                <div class="min-h-28 p-1 border-r border-b border-gray-200 bg-gray-50"></div>
             @endfor
 
 
@@ -77,7 +77,7 @@
                     });
                 @endphp
 
-                <div class="min-h-24 p-1 border-r border-b border-gray-200
+                <div class="min-h-28 p-1 border-r border-b border-gray-200
                             {{ $isCurrentMonth ? 'bg-white' : 'bg-gray-50' }}
                             {{ $isToday ? 'bg-yellow-50' : '' }}">
 
@@ -91,7 +91,7 @@
                     </a>
 
 
-                    <div class="mt-0.5 text-xs space-y-0.5 max-h-12 overflow-y-auto">
+                    <div class="mt-0.5 text-xs space-y-0.5 max-h-16 overflow-y-auto">
                         @foreach ($dayTodos->take(2) as $todo)
                             <div class="flex items-center px-1 rounded hover:bg-gray-100
                                         {{ $todo->status === 'completed' ? 'text-gray-400 line-through' : '' }}"
@@ -129,7 +129,7 @@
 
 
             @for ($i = 0; $i < $emptyAfter; $i++)
-                <div class="min-h-24 p-1 border-r border-b border-gray-200 bg-gray-50"></div>
+                <div class="min-h-28 p-1 border-r border-b border-gray-200 bg-gray-50"></div>
             @endfor
         </div>
     </div>
