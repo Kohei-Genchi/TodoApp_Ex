@@ -25,7 +25,14 @@ services:
       - ./:/var/www
     networks:
       - app-network
-    command: ["/bin/sh", "-c", "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"]
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP server
+      - "8025:8025"  # Web UI
+    networks:
+      - app-network
 
   nginx:
     image: nginx:alpine

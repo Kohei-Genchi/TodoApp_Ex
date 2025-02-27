@@ -15,3 +15,7 @@ Artisan::command('todos:cleanup', function () {
 
 // タスク整理のスケジュール設定
 Schedule::command('todos:cleanup')->dailyAt('00:00');
+
+// メール送信のスケジュール設定
+Schedule::command('reminders:morning')->dailyAt('08:00');
+Schedule::command('reminders:evening')->dailyAt('22:00');
