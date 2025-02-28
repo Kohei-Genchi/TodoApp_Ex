@@ -31,9 +31,9 @@ class SendEveningReminders extends Command
 
                 // Only send if user has an email and has relevant tasks for today
                 if ($user->email && ($pendingCount > 0 || $completedCount > 0)) {
-                    $message = "Good evening! ";
+                    $message = "こんばんは! ";
                     if ($pendingCount > 0) {
-                        $message .= "You still have {$pendingCount} tasks pending for today. ";
+                        $message .= "明日のタスク作成は済んでいますか？ ";
                     }
                     if ($completedCount > 0) {
                         $message .= "Great job completing {$completedCount} tasks today! ";

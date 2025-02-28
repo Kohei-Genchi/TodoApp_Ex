@@ -11,7 +11,7 @@
                 <li class="hover:bg-gray-50 transition-colors"
                     style="border-left: 4px solid {{ $todo->category ? $todo->category->color : 'transparent' }}">
                     <div class="flex items-center p-4">
-
+                        @if($view !== 'inbox')
                         <form id="toggle-form-{{ $todo->id }}" action="{{ route('todos.toggle', $todo) }}" method="POST" class="mr-3">
                             @csrf
                             @method('PATCH')
@@ -20,7 +20,7 @@
                                    {{ $todo->status === 'completed' ? 'checked' : '' }}
                                    class="h-4 w-4 text-blue-600 rounded focus:ring-blue-500">
                         </form>
-
+                        @endif
 
                         <div class="flex-1 min-w-0" onclick="editTodo({{ $todo->id }}, {{ json_encode([
                             'title' => $todo->title,
