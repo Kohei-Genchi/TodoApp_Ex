@@ -33,9 +33,9 @@ class TodoCleanup extends Command
                     'due_time' => null
                 ]);
 
-            $this->info("未完了タスク {$pendingCount} 件をINBOXに戻しました");
+            $this->info("未完了タスク {$pendingCount} 件をMEMOに戻しました");
 
-            Log::info("Todoタスク整理: 完了タスク {$completedCount} 件をゴミ箱に移動、未完了タスク {$pendingCount} 件をINBOXに戻しました");
+            Log::info("Todoタスク整理: 完了タスク {$completedCount} 件をゴミ箱に移動、未完了タスク {$pendingCount} 件をMEMOに戻しました");
 
             return Command::SUCCESS;
         } catch (\Exception $e) {

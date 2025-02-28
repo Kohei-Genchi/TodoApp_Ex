@@ -37,7 +37,7 @@
                 @else
                     <h1 class="text-xl font-semibold">
                         @if($view === 'inbox')
-                            INBOX
+                            MEMO一覧
                         @endif
                     </h1>
                 @endif

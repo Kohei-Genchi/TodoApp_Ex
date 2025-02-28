@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\GuestLoginController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
@@ -7,9 +8,17 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
 
+
+
+
 Route::get('/', function () {
     return redirect()->route('todos.index');
 })->name('home');
+
+// 簡単ログイン
+Route::get('/guest-login',[GuestLoginController::class, 'login'])
+->middleware('guest')
+->name('guest.login');
 
 
 Route::get('/todos', [TodoController::class, 'index'])->name('todos.index');
