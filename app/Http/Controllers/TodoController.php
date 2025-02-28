@@ -89,15 +89,35 @@ class TodoController extends Controller
     }
 
     public function update(TodoRequest $request, Todo $todo): RedirectResponse
-    {
-        if (Gate::denies('update', $todo)) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $data = $request->validated();
-        $todo->update($data);
-        return back()->with('success', 'タスクを更新しました');
+{
+    if (Gate::denies('update', $todo)) {
+        abort(403, 'Unauthorized action.');
     }
+
+    $data = $request->validated();
+
+    // Set location based on due date (similar to store method)
+    if (isset($data['due_date'])) {
+        $data['location'] = ($data['due_date'] === now()->format('Y-m-d'))
+            ? 'TODAY'
+            : 'SCHEDULED';
+    } else {
+        $data['location'] = 'INBOX';
+        $data['due_date'] = null;
+        $data['due_time'] = null;
+    }
+
+    $todo->update($data);
+
+    // Handle recurring tasks (similar to store method)
+    if (!empty($data['recurrence_type']) && $data['recurrence_type'] !== 'none') {
+        // Add user_id to data for createRecurringTasks
+        $data['user_id'] = $todo->user_id;
+        $this->createRecurringTasks($data);
+    }
+
+    return back()->with('success', 'タスクを更新しました');
+}
 
     // ゴミ箱からタスクを復元する専用メソッド
     public function restore(Request $request, Todo $todo): RedirectResponse
