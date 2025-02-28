@@ -26,10 +26,12 @@ Route::get('/dashboard', function () {
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/todos/trash', [TodoController::class, 'trashed'])->name('todos.trashed');
+    Route::delete('/todos/trash/empty', [TodoController::class, 'emptyTrash'])->name('todos.trash.empty'); // 新規追加：ゴミ箱を空にする機能
     Route::post('/todos', [TodoController::class, 'store'])->name('todos.store');
     Route::put('/todos/{todo}', [TodoController::class, 'update'])->name('todos.update');
     Route::patch('/todos/{todo}/toggle', [TodoController::class, 'toggle'])->name('todos.toggle');
     Route::patch('/todos/{todo}/trash', [TodoController::class, 'trash'])->name('todos.trash');
+    Route::patch('/todos/{todo}/restore', [TodoController::class, 'restore'])->name('todos.restore'); // 新規追加：ゴミ箱からタスクを復元
     Route::delete('/todos/{todo}', [TodoController::class, 'destroy'])->name('todos.destroy');
 
 

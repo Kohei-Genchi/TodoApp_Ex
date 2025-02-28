@@ -12,15 +12,12 @@ use Illuminate\Http\RedirectResponse;
 
 class TodoController extends Controller
 {
-
-
     public function index(Request $request): View
     {
         // dd($request->view);
         $view = $request->view ?? 'today';
         $date = $request->date ? now()->parse($request->date) : now();
         // dd($date);
-
 
         // Collectionとはリスト形式でデータを格納できるラッパー
         // https://qiita.com/fcafe_goto/items/9795417752793c989a03
@@ -65,14 +62,12 @@ class TodoController extends Controller
 
     public function store(TodoRequest $request): RedirectResponse
     {
-
         if (Gate::denies('create', Todo::class)) {
             abort(403, 'Unauthorized action.');
         }
 
         $data = $request->validated();
         $data['user_id'] = Auth::id();
-
 
         if (isset($data['due_date'])) {
             $data['location'] = ($data['due_date'] === now()->format('Y-m-d'))
@@ -84,9 +79,7 @@ class TodoController extends Controller
             $data['due_time'] = null;
         }
 
-
         Todo::create($data);
-
 
         if (!empty($data['recurrence_type']) && $data['recurrence_type'] !== 'none') {
             $this->createRecurringTasks($data);
@@ -101,8 +94,38 @@ class TodoController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $todo->update($request->validated());
+        $data = $request->validated();
+        $todo->update($data);
         return back()->with('success', 'タスクを更新しました');
+    }
+
+    // ゴミ箱からタスクを復元する専用メソッド
+    public function restore(Request $request, Todo $todo): RedirectResponse
+    {
+        if (Gate::denies('update', $todo)) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        if ($todo->status !== 'trashed') {
+            return back()->with('error', 'ゴミ箱にあるタスクのみ復元できます');
+        }
+
+        // 期限がある場合は、その日付に復元（今日の場合はTODAY、それ以外はSCHEDULED）
+        if ($todo->due_date) {
+            if ($todo->due_date->isToday()) {
+                $todo->location = 'TODAY';
+            } else {
+                $todo->location = 'SCHEDULED';
+            }
+        } else {
+            // 期限がない場合はINBOXに復元
+            $todo->location = 'INBOX';
+        }
+
+        $todo->status = 'pending';
+        $todo->save();
+
+        return back()->with('success', 'タスクを復元しました');
     }
 
     public function toggle(Todo $todo): RedirectResponse
@@ -147,6 +170,15 @@ class TodoController extends Controller
 
         $todo->delete();
         return back()->with('success', 'タスクを完全に削除しました');
+    }
+
+    // ゴミ箱を空にする機能
+    public function emptyTrash(): RedirectResponse
+    {
+        // 認証済みユーザーのtrashedステータスのタスクをすべて削除
+        Auth::user()->todos()->where('status', 'trashed')->delete();
+
+        return back()->with('success', 'ゴミ箱を空にしました');
     }
 
     private function createRecurringTasks(array $data): void

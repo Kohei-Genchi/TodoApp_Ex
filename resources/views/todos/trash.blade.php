@@ -3,6 +3,18 @@
 
         @include('todos.partials.nav-tabs')
 
+        <div class="mb-4 flex justify-between items-center">
+            <h1 class="text-xl font-semibold">ゴミ箱</h1>
+            @if(!$todos->isEmpty())
+                <form action="{{ route('todos.trash.empty') }}" method="POST" onsubmit="return confirm('ゴミ箱を空にしますか？この操作は取り消せません。')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600">
+                        ゴミ箱を空にする
+                    </button>
+                </form>
+            @endif
+        </div>
 
         <div>
             @if($todos->isEmpty())
@@ -34,10 +46,9 @@
 
                                 <div class="mt-2 sm:mt-0 flex space-x-2">
 
-                                    <form action="{{ route('todos.update', $todo) }}" method="POST">
+                                    <form action="{{ route('todos.restore', $todo) }}" method="POST">
                                         @csrf
-                                        @method('PUT')
-                                        <input type="hidden" name="status" value="pending">
+                                        @method('PATCH')
                                         <button type="submit" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
                                             復元
                                         </button>
