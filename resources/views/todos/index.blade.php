@@ -1,18 +1,19 @@
 <x-app-layout>
     <div class="max-w-6xl mx-auto p-4">
-        @include('todos.partials.nav-tabs')
-
-        <div class="mb-2 flex justify-between items-center">
+        <!-- ページヘッダー -->
+        <div class="flex justify-between items-center mb-4">
             <div>
                 @if($view === 'calendar')
                     <div class="flex items-center">
-                        <a href="{{ route('todos.index', ['view' => 'calendar', 'date' => $date->copy()->subMonth()->format('Y-m-d')]) }}" class="mr-2">
+                        <a href="{{ route('todos.index', ['view' => 'calendar', 'date' => $date->copy()->subMonth()->format('Y-m-d')]) }}"
+                           class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
-                        <h1 class="text-xl font-semibold">{{ $date->format('Y年n月') }}</h1>
-                        <a href="{{ route('todos.index', ['view' => 'calendar', 'date' => $date->copy()->addMonth()->format('Y-m-d')]) }}" class="ml-2">
+                        <h1 class="text-xl font-semibold px-2">{{ $date->format('Y年n月') }}</h1>
+                        <a href="{{ route('todos.index', ['view' => 'calendar', 'date' => $date->copy()->addMonth()->format('Y-m-d')]) }}"
+                           class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -20,13 +21,20 @@
                     </div>
                 @elseif($view === 'date' || $view === 'today')
                     <div class="flex items-center">
-                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}" class="mr-2">
+                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}"
+                           class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                             </svg>
                         </a>
-                        <h1 class="text-xl font-semibold">{{ $date->format('m月d日') }}({{ ['日', '月', '火', '水', '木', '金', '土'][$date->dayOfWeek] }})</h1>
-                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}" class="ml-2">
+                        <div class="px-2">
+                            <h1 class="text-xl font-semibold">{{ $date->format('m月d日') }}({{ ['日', '月', '火', '水', '木', '金', '土'][$date->dayOfWeek] }})</h1>
+                            @if($view === 'today')
+                                <p class="text-sm text-gray-500">本日のタスク</p>
+                            @endif
+                        </div>
+                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}"
+                           class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                             </svg>
@@ -37,230 +45,233 @@
 
             @auth
                 <button type="button" onclick="openTaskModal('add')"
-                        class="bg-blue-500 text-white px-3 py-1.5 text-sm rounded hover:bg-blue-600 transition-colors">
+                        class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
                     タスクを追加
                 </button>
             @endauth
         </div>
 
+        <!-- メインコンテンツ -->
         <div>
             @if($view === 'calendar')
-                @include('todos.partials.calendar')
+                <!-- カレンダービュー（固定の高さで6週常に表示） -->
+                <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                    <!-- カレンダーヘッダー -->
+                    <div class="grid grid-cols-7 text-center text-sm bg-gray-50 border-b border-gray-200">
+                        <div class="py-2 text-red-600 font-medium">日</div>
+                        <div class="py-2 font-medium">月</div>
+                        <div class="py-2 font-medium">火</div>
+                        <div class="py-2 font-medium">水</div>
+                        <div class="py-2 font-medium">木</div>
+                        <div class="py-2 font-medium">金</div>
+                        <div class="py-2 text-blue-600 font-medium">土</div>
+                    </div>
+
+                    <!-- カレンダーグリッド（常に6週分表示） -->
+                    <div class="grid grid-cols-7">
+                        @php
+                            // 現在の月の初日
+                            $firstOfMonth = $date->copy()->startOfMonth();
+                            // 現在の月の末日
+                            $lastOfMonth = $date->copy()->endOfMonth();
+
+                            // カレンダー表示の最初の日（月の初日を含む週の日曜日）
+                            $firstDayOfCalendar = $firstOfMonth->copy()->startOfWeek();
+
+                            // 常に6週間表示するための計算
+                            $weeksToShow = 6;
+                            $lastDayOfCalendar = $firstDayOfCalendar->copy()->addWeeks($weeksToShow)->subDay();
+
+                            $today = now()->startOfDay();
+                        @endphp
+
+                        @for ($day = $firstDayOfCalendar->copy(); $day->lte($lastDayOfCalendar); $day->addDay())
+                            @php
+                                $isCurrentMonth = $day->month === $date->month;
+                                $isToday = $day->isSameDay($today);
+                                $dayTodos = $todos->filter(function($todo) use ($day) {
+                                    return $todo->due_date && $todo->due_date->isSameDay($day);
+                                });
+                            @endphp
+
+                            <div class="h-20 p-1 border-r border-b border-gray-200 transition-colors
+                                    {{ $isCurrentMonth ? 'bg-white' : 'bg-gray-50' }}
+                                    {{ $isToday ? 'bg-blue-50' : '' }}">
+
+                                <!-- 日付表示 -->
+                                <div class="flex justify-between items-center">
+                                    <a href="{{ route('todos.index', ['view' => 'date', 'date' => $day->format('Y-m-d')]) }}"
+                                       class="inline-block rounded-full w-6 h-6 text-center leading-6
+                                              {{ !$isCurrentMonth ? 'text-gray-400' : '' }}
+                                              {{ $day->dayOfWeek === 0 ? 'text-red-600' : '' }}
+                                              {{ $day->dayOfWeek === 6 ? 'text-blue-600' : '' }}
+                                              {{ $isToday ? 'bg-blue-600 text-white font-medium' : '' }}">
+                                        {{ $day->day }}
+                                    </a>
+
+                                    @if($dayTodos->count() > 0)
+                                        <span class="text-xs text-blue-600 font-medium">
+                                            {{ $dayTodos->count() }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- タスク表示（最大2件まで） -->
+                                <div class="mt-1 overflow-hidden space-y-1">
+                                    @foreach ($dayTodos->take(2) as $todo)
+                                        <div class="text-xs truncate px-1 rounded-sm
+                                                  {{ $todo->status === 'completed' ? 'line-through text-gray-400' : '' }}"
+                                             style="border-left: 2px solid {{ $todo->category ? $todo->category->color : '#9CA3AF' }}">
+                                            <a href="#" onclick="event.preventDefault(); editTodo({{ $todo->id }}, {{ json_encode([
+                                                'title' => $todo->title,
+                                                'due_date' => $todo->due_date ? $todo->due_date->format('Y-m-d') : null,
+                                                'due_time' => $todo->due_time ? $todo->due_time->format('H:i') : null,
+                                                'category_id' => $todo->category_id,
+                                                'recurrence_type' => $todo->recurrence_type,
+                                                'recurrence_end_date' => $todo->recurrence_end_date ? $todo->recurrence_end_date->format('Y-m-d') : null,
+                                            ]) }})">
+                                                {{ $todo->title }}
+                                            </a>
+                                        </div>
+                                    @endforeach
+
+                                    @if ($dayTodos->count() > 2)
+                                        <a href="{{ route('todos.index', ['view' => 'date', 'date' => $day->format('Y-m-d')]) }}"
+                                           class="text-xs text-blue-600 hover:text-blue-800">
+                                            +{{ $dayTodos->count() - 2 }}
+                                        </a>
+                                    @endif
+                                </div>
+                            </div>
+                        @endfor
+                    </div>
+                </div>
             @elseif($view === 'today' || $view === 'date')
-                @include('todos.partials.task-list')
+                <!-- 本日/特定日付のタスクビュー -->
+                <div class="bg-white rounded-lg shadow-sm">
+                    <!-- シンプルなステータスバー -->
+                    <div class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <div class="text-sm text-gray-700">
+                            @php
+                                $totalTasks = $todos->count();
+                                $completedTasks = $todos->where('status', 'completed')->count();
+                                $pendingTasks = $totalTasks - $completedTasks;
+                            @endphp
+                            <span>全 {{ $totalTasks }} タスク</span>
+                            <span class="mx-2 text-gray-400">|</span>
+                            <span class="text-green-600">完了: {{ $completedTasks }}</span>
+                            <span class="mx-2 text-gray-400">|</span>
+                            <span class="text-blue-600">未完了: {{ $pendingTasks }}</span>
+                        </div>
+
+                        <div class="text-sm text-gray-500">
+                            {{ $date->format('Y年m月d日') }}
+                        </div>
+                    </div>
+
+                    @if($todos->isEmpty())
+                        <!-- タスクがない場合 -->
+                        <div class="p-8 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">タスクはありません</h3>
+                            <p class="text-sm text-gray-500 mb-4">新しいタスクを追加しましょう</p>
+                            <button type="button" onclick="openTaskModal('add')"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-md shadow-sm hover:bg-blue-700 transition-colors inline-flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                タスクを追加
+                            </button>
+                        </div>
+                    @else
+                        <!-- タスク一覧（シンプル化） -->
+                        <ul class="divide-y divide-gray-100">
+                            @foreach($todos as $todo)
+                                <li class="hover:bg-gray-50 transition-colors">
+                                    <div class="p-3 sm:px-4 flex items-center">
+                                        <form action="{{ route('todos.toggle', $todo) }}" method="POST" class="mr-3 flex-shrink-0">
+                                            @csrf
+                                            @method('PATCH')
+                                            <input type="checkbox" onChange="this.form.submit()"
+                                                   {{ $todo->status === 'completed' ? 'checked' : '' }}
+                                                   class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500">
+                                        </form>
+
+                                        <div class="flex-1 min-w-0" onclick="editTodo({{ $todo->id }}, {{ json_encode([
+                                            'title' => $todo->title,
+                                            'due_date' => $todo->due_date ? $todo->due_date->format('Y-m-d') : null,
+                                            'due_time' => $todo->due_time ? $todo->due_time->format('H:i') : null,
+                                            'category_id' => $todo->category_id,
+                                            'recurrence_type' => $todo->recurrence_type,
+                                            'recurrence_end_date' => $todo->recurrence_end_date ? $todo->recurrence_end_date->format('Y-m-d') : null,
+                                        ]) }})" style="cursor: pointer">
+                                            <div class="flex items-center">
+                                                <p class="font-medium {{ $todo->status === 'completed' ? 'line-through text-gray-500' : 'text-gray-900' }}">
+                                                    {{ $todo->title }}
+                                                </p>
+
+                                                @if($todo->category)
+                                                    <span class="ml-2 px-2 py-0.5 rounded-full text-xs font-medium"
+                                                          style="background-color: {{ hexToRgba($todo->category->color, 0.15) }}; color: {{ $todo->category->color }}">
+                                                        {{ $todo->category->name }}
+                                                    </span>
+                                                @endif
+
+                                                @if($todo->isRecurring())
+                                                    <span class="ml-2 text-xs text-gray-500">
+                                                        <span class="inline-flex items-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                                            </svg>
+                                                            {{ $todo->recurrence_type === 'daily' ? '毎日' :
+                                                               ($todo->recurrence_type === 'weekly' ? '毎週' : '毎月') }}
+                                                        </span>
+                                                    </span>
+                                                @endif
+                                            </div>
+
+                                            @if($todo->due_time)
+                                                <div class="text-sm text-gray-500 mt-0.5">
+                                                    <span class="inline-flex items-center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                        </svg>
+                                                        {{ $todo->due_time->format('H:i') }}
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </div>
+
+                                        <div class="flex-shrink-0 ml-3">
+                                            <form action="{{ route('todos.trash', $todo) }}" method="POST" class="inline">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             @endif
         </div>
 
         @auth
-        <!-- Enhanced Task Modal with Inline Category Management -->
-        <div id="task-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            <div class="absolute inset-0 bg-black bg-opacity-40" onclick="closeTaskModal()"></div>
-
-            <!-- Modal Content -->
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-xl relative z-10 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-                    <h3 id="modal-title" class="text-lg font-medium text-gray-800">新しいタスク</h3>
-                </div>
-
-                <div class="p-6">
-                    <!-- Task Form -->
-                    <form id="task-form" method="POST" action="{{ route('todos.store') }}">
-                        @csrf
-                        <div id="method-field-container">
-                            <!-- Method field will be injected here for PUT requests -->
-                        </div>
-
-                        <div class="space-y-4">
-                            <div>
-                                <label for="title" class="block text-sm font-medium text-gray-700 mb-1">タスク名<span class="text-red-500">*</span></label>
-                                <input type="text" id="title" name="title" required value=""
-                                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                            </div>
-
-                            <div>
-                                <label for="due_date" class="block text-sm font-medium text-gray-700 mb-1">日付</label>
-                                <input type="date" id="due_date" name="due_date" value="{{ now()->format('Y-m-d') }}"
-                                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                            </div>
-
-                            <div>
-                                <label for="due_time" class="block text-sm font-medium text-gray-700 mb-1">時間</label>
-                                <input type="time" id="due_time" name="due_time" value="{{ now()->format('H:i') }}"
-                                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                            </div>
-
-                            <!-- Enhanced Category Selection with Inline Creation -->
-                            <div id="category-section">
-                                <div class="flex justify-between items-center mb-1">
-                                    <label for="category_id" class="block text-sm font-medium text-gray-700">カテゴリー</label>
-                                    <button type="button" id="new-category-button"
-                                            class="text-xs text-blue-500 hover:text-blue-700 focus:outline-none">
-                                        新しいカテゴリー
-                                    </button>
-                                </div>
-
-                                <!-- Category Selector -->
-                                <div id="category-selector" class="mb-3">
-                                    <select id="category_id" name="category_id"
-                                            class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                                        <option value="">カテゴリーなし</option>
-                                        @foreach($categories as $category)
-                                            <option value="{{ $category->id }}" data-color="{{ $category->color }}">
-                                                {{ $category->name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <!-- Inline Category Creation Form (Hidden by Default) -->
-                                <div id="new-category-form" class="hidden space-y-3 p-3 bg-gray-50 rounded-md mb-3">
-                                    <div>
-                                        <label for="new-category-name" class="block text-sm font-medium text-gray-700 mb-1">カテゴリー名</label>
-                                        <input type="text" id="new-category-name"
-                                               class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                                    </div>
-
-                                    <div>
-                                        <label for="new-category-color" class="block text-sm font-medium text-gray-700 mb-1">カラー</label>
-                                        <div class="flex items-center">
-                                            <input type="color" id="new-category-color" value="#3B82F6"
-                                                   class="h-8 w-12 border border-gray-300 rounded">
-                                            <div class="ml-2 flex-1 h-8 rounded-md transition-colors" id="color-preview"></div>
-                                        </div>
-                                    </div>
-
-                                    <div class="flex space-x-2">
-                                        <button type="button" id="save-category-button"
-                                                class="px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
-                                            保存
-                                        </button>
-                                        <button type="button" id="cancel-category-button"
-                                                class="px-3 py-1 bg-gray-200 text-gray-700 text-sm rounded hover:bg-gray-300 transition-colors">
-                                            キャンセル
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Category Chips (Visual Display of Selected Category) -->
-                                <div id="selected-category-chip" class="hidden">
-                                    <div class="inline-flex items-center px-2.5 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                                        <span id="selected-category-name">カテゴリー名</span>
-                                        <button type="button" id="clear-category-button" class="ml-1 text-blue-500 hover:text-blue-800">
-                                            <svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <label for="recurrence_type" class="block text-sm font-medium text-gray-700 mb-1">繰り返し</label>
-                                <select id="recurrence_type" name="recurrence_type"
-                                        class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm"
-                                        onchange="toggleRecurrenceEndDate()">
-                                    <option value="none">繰り返しなし</option>
-                                    <option value="daily">毎日</option>
-                                    <option value="weekly">毎週</option>
-                                    <option value="monthly">毎月</option>
-                                </select>
-                            </div>
-
-                            <div id="recurrence-end-container" class="hidden">
-                                <label for="recurrence_end_date" class="block text-sm font-medium text-gray-700 mb-1">繰り返し終了日</label>
-                                <input type="date" id="recurrence_end_date" name="recurrence_end_date"
-                                       class="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 shadow-sm">
-                            </div>
-
-                            <input type="hidden" id="task-id" value="">
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Footer Section -->
-                <div class="px-6 py-4 bg-gray-50 rounded-b-lg border-t border-gray-200">
-                    <!-- Action Buttons -->
-                    <div class="flex flex-wrap justify-between items-center gap-2">
-                        <!-- Delete Options (Hidden by Default) -->
-                        <div id="delete-options" class="hidden flex flex-wrap gap-2">
-                            <button type="button" id="delete-single-btn"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                </svg>
-                                このタスクを削除
-                            </button>
-                            <button type="button" id="delete-recurring-btn"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm bg-red-700 text-white rounded hover:bg-red-800 transition-colors hidden">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
-                                </svg>
-                                繰り返しタスクも削除
-                            </button>
-                        </div>
-
-                        <!-- Save/Cancel Buttons -->
-                        <div class="flex items-center ml-auto gap-2">
-                            <button type="button" onclick="closeTaskModal()"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
-                                キャンセル
-                            </button>
-                            <button type="button" onclick="submitTaskForm()"
-                                    class="inline-flex items-center px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                                </svg>
-                                <span id="submit-label">追加</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Close Button -->
-                <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-500 focus:outline-none focus:text-gray-500 transition-colors"
-                        onclick="closeTaskModal()">
-                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Delete Confirmation Modal -->
-        <div id="delete-confirm-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
-            <div class="absolute inset-0 bg-black bg-opacity-40" onclick="closeDeleteModal()"></div>
-
-            <div class="bg-white rounded-lg shadow-lg w-full max-w-md relative z-10 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-200 bg-red-50">
-                    <h3 class="text-lg font-medium text-red-600">削除の確認</h3>
-                </div>
-
-                <div class="p-6">
-                    <div class="flex items-center mb-4 text-red-600">
-                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <p id="delete-message" class="text-gray-700 font-medium"></p>
-                    </div>
-
-                    <p class="text-sm text-gray-500 mb-6">この操作は元に戻すことができません。</p>
-
-                    <div class="flex justify-end space-x-3">
-                        <button type="button" onclick="closeDeleteModal()"
-                                class="px-3 py-1.5 text-sm bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors">
-                            キャンセル
-                        </button>
-                        <form id="delete-form" method="POST">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="px-3 py-1.5 text-sm bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
-                                削除する
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- タスク編集/追加モーダル -->
+        @include('todos.partials.task-modal')
+        @endauth
+    </div>
 
         <script>
             // Main task modal functionality
@@ -623,6 +634,6 @@
                 }
             });
         </script>
-        @endauth
+        {{-- @endauth --}}
     </div>
 </x-app-layout>

@@ -5,7 +5,9 @@
             <div class="flex justify-between items-center mb-6">
                 <span class="font-bold">{{ Auth::user()->name }}</span>
                 <div class="flex space-x-3">
-
+                    <a href="{{ route('todos.index', ['view' => 'today']) }}" class="text-lg text-gray-400 hover:text-white" title="本日のタスク">
+                        🔲
+                    </a>
                     <a href="{{ route('todos.index', ['view' => 'calendar']) }}" class="text-lg text-gray-400 hover:text-white" title="カレンダー">
                         🗓️
                     </a>
@@ -29,9 +31,6 @@
                     </a>
                     <a href="{{ route('register') }}" class="text-sm text-gray-400 hover:text-white" title="新規登録">
                         📝
-                    </a>
-                    <a href="{{ route('guest.login') }}" class="text-sm text-gray-400 hover:text-white" title="かんたんログイン">
-                        👤
                     </a>
                 </div>
             </div>

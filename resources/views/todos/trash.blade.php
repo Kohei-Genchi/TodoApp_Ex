@@ -1,8 +1,6 @@
 <x-app-layout>
     <div class="max-w-6xl mx-auto p-4">
 
-        @include('todos.partials.nav-tabs')
-
         <div class="mb-4 flex justify-between items-center">
             <h1 class="text-xl font-semibold">ゴミ箱</h1>
             @if(!$todos->isEmpty())
