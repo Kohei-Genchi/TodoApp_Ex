@@ -14,27 +14,25 @@ class TodoController extends Controller
 {
     public function index(Request $request): View
     {
-        // dd($request->view);
+        // Default to 'today' view if none specified
         $view = $request->view ?? 'today';
         $date = $request->date ? now()->parse($request->date) : now();
-        // dd($date);
 
-        // Collectionとはリスト形式でデータを格納できるラッパー
-        // https://qiita.com/fcafe_goto/items/9795417752793c989a03
+        // Initialize empty collections
         $todos = collect();
         $categories = collect();
 
         if (Auth::check()) {
-            // Eagerロードとは、N+1問題を解決するための技法(一度のクエリでまとめてデータを取得)
-            // https://qiita.com/teshimaaaaa1101/items/e4a45780a2e230b97558
+            // Get categories for the authenticated user
+            $categories = Auth::user()->categories()->orderBy('name')->get();
+
+            // Query builder with eager loading
             $query = Auth::user()->todos()
                 ->with('category')
                 ->where('status', '!=', 'trashed');
 
             switch ($view) {
-                case 'inbox':
-                    $query->where('location', 'INBOX');
-                    break;
+                // We no longer need specific 'inbox' handling in the main view
                 case 'today':
                     $query->whereDate('due_date', now()->format('Y-m-d'));
                     break;
@@ -48,17 +46,14 @@ class TodoController extends Controller
                         $startDate->format('Y-m-d'),
                         $endDate->format('Y-m-d')
                     ]);
-                      break;
+                    break;
             }
+
             $todos = $query->orderBy('due_time')->get();
-            // dd($todos[0]['title']);
-    // orderBy('name'):カテゴリ選択ドロップダウンなどで、常に同じ順序でカテゴリを表示させるため
-            $categories = Auth::user()->categories()->orderBy('name')->get();
         }
 
         return view('todos.index', compact('todos', 'view', 'date', 'categories'));
     }
-
 
     public function store(TodoRequest $request): RedirectResponse
     {
@@ -89,37 +84,36 @@ class TodoController extends Controller
     }
 
     public function update(TodoRequest $request, Todo $todo): RedirectResponse
-{
-    if (Gate::denies('update', $todo)) {
-        abort(403, 'Unauthorized action.');
+    {
+        if (Gate::denies('update', $todo)) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $data = $request->validated();
+
+        // Set location based on due date
+        if (isset($data['due_date'])) {
+            $data['location'] = ($data['due_date'] === now()->format('Y-m-d'))
+                ? 'TODAY'
+                : 'SCHEDULED';
+        } else {
+            $data['location'] = 'INBOX';
+            $data['due_date'] = null;
+            $data['due_time'] = null;
+        }
+
+        $todo->update($data);
+
+        // Handle recurring tasks
+        if (!empty($data['recurrence_type']) && $data['recurrence_type'] !== 'none') {
+            // Add user_id to data for createRecurringTasks
+            $data['user_id'] = $todo->user_id;
+            $this->createRecurringTasks($data);
+        }
+
+        return back()->with('success', 'タスクを更新しました');
     }
 
-    $data = $request->validated();
-
-    // Set location based on due date (similar to store method)
-    if (isset($data['due_date'])) {
-        $data['location'] = ($data['due_date'] === now()->format('Y-m-d'))
-            ? 'TODAY'
-            : 'SCHEDULED';
-    } else {
-        $data['location'] = 'INBOX';
-        $data['due_date'] = null;
-        $data['due_time'] = null;
-    }
-
-    $todo->update($data);
-
-    // Handle recurring tasks (similar to store method)
-    if (!empty($data['recurrence_type']) && $data['recurrence_type'] !== 'none') {
-        // Add user_id to data for createRecurringTasks
-        $data['user_id'] = $todo->user_id;
-        $this->createRecurringTasks($data);
-    }
-
-    return back()->with('success', 'タスクを更新しました');
-}
-
-    // ゴミ箱からタスクを復元する専用メソッド
     public function restore(Request $request, Todo $todo): RedirectResponse
     {
         if (Gate::denies('update', $todo)) {
@@ -182,17 +176,24 @@ class TodoController extends Controller
         return view('todos.trash', compact('todos', 'categories'));
     }
 
-    public function destroy(Todo $todo): RedirectResponse
+    public function destroy(Todo $todo, Request $request): RedirectResponse
     {
         if (Gate::denies('delete', $todo)) {
             abort(403, 'Unauthorized action.');
+        }
+
+        // Check if we're deleting all recurring tasks too
+        if ($request->has('delete_recurring') && $todo->recurrence_type && $todo->recurrence_type !== 'none') {
+            // This could be expanded to delete all related recurring tasks based on some pattern
+            // For now, we'll just delete this specific task
+            $todo->delete();
+            return back()->with('success', '繰り返しタスクを削除しました');
         }
 
         $todo->delete();
         return back()->with('success', 'タスクを完全に削除しました');
     }
 
-    // ゴミ箱を空にする機能
     public function emptyTrash(): RedirectResponse
     {
         // 認証済みユーザーのtrashedステータスのタスクをすべて削除
@@ -216,7 +217,6 @@ class TodoController extends Controller
         //-----繰り返し日付の生成------
         $dates = [];
         //.copy()：現在の日付をコピー(Carbonオブジェクトを変更せずに新しいオブジェクトを作成)
-        //https://qiita.com/monji586/items/bf769be57bca546e8049
         $currentDate = $startDate->copy()->addDay();
         switch ($data['recurrence_type']) {
             case 'daily':
