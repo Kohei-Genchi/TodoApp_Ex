@@ -17,6 +17,29 @@ Artisan::command('inspire', function () {
 // They're automatically discovered from the app/Console/Commands directory
 
 // Set up scheduler
-Schedule::command('todos:cleanup')->dailyAt('00:00');
-Schedule::command('reminders:morning')->dailyAt('08:00');
-Schedule::command('reminders:evening')->dailyAt('15:00');
+Schedule::command('todos:cleanup')
+    ->dailyAt('20:27');
+    // ->timezone('Asia/Kolkata');
+
+// メール送信のスケジュール設定
+Schedule::command('reminders:morning')
+    ->dailyAt('20:27'); // 8:00 IST is 2:30 UTC
+    // ->timezone('Asia/Kolkata');
+
+
+Schedule::command('reminders:evening')
+    ->dailyAt('20:27'); // 20:00 IST is 14:30 UTC
+    // ->timezone('Asia/Kolkata');
+
+// Schedule::command('todos:cleanup')
+//     ->dailyAt('00:00')
+//     ->timezone('UTC');
+
+// // メール送信のスケジュール設定
+// Schedule::command('reminders:morning')
+//     ->dailyAt('02:30') // 8:00 IST is 2:30 UTC
+//     ->timezone('UTC');
+
+// Schedule::command('reminders:evening')
+//     ->dailyAt('14:50') // 20:00 IST is 14:30 UTC
+//     ->timezone('UTC');

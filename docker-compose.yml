@@ -17,14 +17,18 @@ services:
   scheduler:
     build:
       context: .
-      dockerfile: docker/php/Dockerfile
+      dockerfile: docker/scheduler/Dockerfile
     container_name: my-laravel-scheduler
     restart: unless-stopped
     working_dir: /var/www
     volumes:
       - ./:/var/www
+      - ./scheduler.sh:/scheduler.sh
+    environment:
+      - TZ=Asia/Kolkata
     networks:
       - app-network
+    command: ["/bin/bash", "/scheduler.sh"]
 
   mailhog:
     image: jcalonso/mailhog:latest
