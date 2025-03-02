@@ -202,50 +202,67 @@ class TodoController extends Controller
         return back()->with('success', 'ゴミ箱を空にしました');
     }
 
-    private function createRecurringTasks(array $data): void
-    {
-        if (empty($data['due_date'])) return;
-        //now()->parce():文字列をDateTimeオブジェクトに変換
-        $startDate = now()->parse($data['due_date']);
-        $endDate = !empty($data['recurrence_end_date'])
-            ? now()->parse($data['recurrence_end_date'])
-            : $startDate->copy()->addMonths(1);
+// TodoController.php の createRecurringTasks メソッドを修正
 
-        //開始日が終了日と同じかそれより後の場合、繰り返しタスクを作成できないため、関数を終了。
-        if ($startDate->greaterThanOrEqualTo($endDate)) return;
+private function createRecurringTasks(array $data): void
+{
+    if (empty($data['due_date'])) return;
 
-        //-----繰り返し日付の生成------
-        $dates = [];
-        //.copy()：現在の日付をコピー(Carbonオブジェクトを変更せずに新しいオブジェクトを作成)
-        $currentDate = $startDate->copy()->addDay();
-        switch ($data['recurrence_type']) {
-            case 'daily':
-                while ($currentDate->lessThanOrEqualTo($endDate)) {
-                    $dates[] = $currentDate->copy();
-                    $currentDate->addDay();
-                }
-                break;
-            case 'weekly':
-                while ($currentDate->lessThanOrEqualTo($endDate)) {
-                    $dates[] = $currentDate->copy();
-                    $currentDate->addWeek();
-                }
-                break;
-            case 'monthly':
-                while ($currentDate->lessThanOrEqualTo($endDate)) {
-                    $dates[] = $currentDate->copy();
-                    $currentDate->addMonth();
-                }
-                break;
-        }
+    // 開始日を取得
+    $startDate = now()->parse($data['due_date']);
 
-        foreach ($dates as $date) {
-            $taskData = $data;
-            $taskData['due_date'] = $date->format('Y-m-d');
-            $taskData['location'] = $date->isToday() ? 'TODAY' : 'SCHEDULED';
+    // 終了日を設定（指定されていない場合は1ヶ月後）
+    $endDate = !empty($data['recurrence_end_date'])
+        ? now()->parse($data['recurrence_end_date'])
+        : $startDate->copy()->addMonths(1);
 
-            unset($taskData['recurrence_type'], $taskData['recurrence_end_date']);
-            Todo::create($taskData);
-        }
+    // 開始日が終了日と同じかそれ以降の場合は何もしない
+    if ($startDate->greaterThanOrEqualTo($endDate)) return;
+
+    // 繰り返し日付の生成
+    $dates = [];
+
+    // 開始日そのものからスタート（翌日からではなく）
+    $currentDate = $startDate->copy();
+
+    // 最初のタスクは別途作成されるので、初回分をスキップして2回目以降を生成
+    switch ($data['recurrence_type']) {
+        case 'daily':
+            // 初回の日付から1日進める
+            $currentDate->addDay();
+            while ($currentDate->lessThanOrEqualTo($endDate)) {
+                $dates[] = $currentDate->copy();
+                $currentDate->addDay();
+            }
+            break;
+
+        case 'weekly':
+            // 初回の日付から1週間進める
+            $currentDate->addWeek();
+            while ($currentDate->lessThanOrEqualTo($endDate)) {
+                $dates[] = $currentDate->copy();
+                $currentDate->addWeek();
+            }
+            break;
+
+        case 'monthly':
+            // 初回の日付から1ヶ月進める
+            $currentDate->addMonth();
+            while ($currentDate->lessThanOrEqualTo($endDate)) {
+                $dates[] = $currentDate->copy();
+                $currentDate->addMonth();
+            }
+            break;
     }
+
+    // 各日付に対してタスクを作成
+    foreach ($dates as $date) {
+        $taskData = $data;
+        $taskData['due_date'] = $date->format('Y-m-d');
+        $taskData['location'] = $date->isToday() ? 'TODAY' : 'SCHEDULED';
+
+        unset($taskData['recurrence_type'], $taskData['recurrence_end_date']);
+        Todo::create($taskData);
+    }
+}
 }
