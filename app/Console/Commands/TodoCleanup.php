@@ -1,4 +1,7 @@
 <?php
+
+namespace App\Console\Commands;
+
 use App\Models\Todo;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
@@ -6,27 +9,47 @@ use Carbon\Carbon;
 
 class TodoCleanup extends Command
 {
-    protected $signature = 'todos:cleanup';
-    protected $description = '昨日までの完了タスクをゴミ箱に移動し、未完了タスクをINBOXに戻す';
+    protected $signature = 'todos:cleanup {--days=1 : Number of days to look back}';
+    protected $description = '期限切れのタスクを整理する';
 
     public function handle()
     {
-        // 昨日の日付
-        $yesterday = Carbon::yesterday()->format('Y-m-d');
+        $daysBack = $this->option('days');
+        $targetDate = Carbon::now()->subDays($daysBack)->format('Y-m-d');
+
+        $this->info("Target date: {$targetDate}");
+
+        // First, let's check what tasks exist
+        $totalCount = Todo::whereDate('due_date', $targetDate)->count();
+        $this->info("Total tasks with due date {$targetDate}: {$totalCount}");
+
+        $todayLocationCount = Todo::where('location', 'TODAY')
+            ->whereDate('due_date', $targetDate)
+            ->count();
+        $this->info("Tasks with location='TODAY' and due date {$targetDate}: {$todayLocationCount}");
+
+        // Show statuses
+        $statusCounts = Todo::whereDate('due_date', $targetDate)
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->get();
+
+        $this->info("Status counts for tasks due on {$targetDate}:");
+        foreach ($statusCounts as $status) {
+            $this->info("- {$status->status}: {$status->count}");
+        }
 
         try {
             // 完了したタスクをゴミ箱に移動
-            $completedCount = Todo::where('location', 'TODAY')
-                ->where('status', 'completed')
-                ->whereDate('due_date', $yesterday)
+            $completedCount = Todo::where('status', 'completed')
+                ->whereDate('due_date', $targetDate)
                 ->update(['status' => 'trashed']);
 
             $this->info("完了タスク {$completedCount} 件をゴミ箱に移動しました");
 
             // 未完了タスクをINBOXに戻す
-            $pendingCount = Todo::where('location', 'TODAY')
-                ->where('status', 'pending')
-                ->whereDate('due_date', $yesterday)
+            $pendingCount = Todo::where('status', 'pending')
+                ->whereDate('due_date', $targetDate)
                 ->update([
                     'location' => 'INBOX',
                     'due_date' => null,
