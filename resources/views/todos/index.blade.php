@@ -21,7 +21,7 @@
                     </div>
                 @elseif($view === 'date' || $view === 'today')
                     <div class="flex items-center">
-                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}"
+                    <a href="{{ route('todos.index', ['view' => ($view === 'today' ? 'date' : $view), 'date' => $date->copy()->subDay()->format('Y-m-d')]) }}"
                            class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -33,7 +33,7 @@
                                 <p class="text-sm text-gray-500">本日のタスク</p>
                             @endif
                         </div>
-                        <a href="{{ route('todos.index', ['view' => $view, 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}"
+                        <a href="{{ route('todos.index', ['view' => ($view === 'today' ? 'date' : $view), 'date' => $date->copy()->addDay()->format('Y-m-d')]) }}"
                            class="p-1.5 rounded-full text-gray-600 hover:bg-gray-100 transition-colors">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />

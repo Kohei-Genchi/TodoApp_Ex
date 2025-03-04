@@ -9,29 +9,31 @@ use Carbon\Carbon;
 
 class TodoCleanup extends Command
 {
-    protected $signature = 'todos:cleanup {--days=1 : Number of days to look back}';
-    protected $description = '期限切れのタスクを整理する';
+    protected $signature = "todos:cleanup {--days=0 : Number of days to look back}";
+    protected $description = "期限切れのタスクを整理する";
 
     public function handle()
     {
-        $daysBack = $this->option('days');
-        $targetDate = Carbon::now()->subDays($daysBack)->format('Y-m-d');
+        $daysBack = $this->option("days");
+        $targetDate = Carbon::now()->subDays($daysBack)->format("Y-m-d");
 
         $this->info("Target date: {$targetDate}");
 
         // First, let's check what tasks exist
-        $totalCount = Todo::whereDate('due_date', $targetDate)->count();
+        $totalCount = Todo::whereDate("due_date", $targetDate)->count();
         $this->info("Total tasks with due date {$targetDate}: {$totalCount}");
 
-        $todayLocationCount = Todo::where('location', 'TODAY')
-            ->whereDate('due_date', $targetDate)
+        $todayLocationCount = Todo::where("location", "TODAY")
+            ->whereDate("due_date", $targetDate)
             ->count();
-        $this->info("Tasks with location='TODAY' and due date {$targetDate}: {$todayLocationCount}");
+        $this->info(
+            "Tasks with location='TODAY' and due date {$targetDate}: {$todayLocationCount}"
+        );
 
         // Show statuses
-        $statusCounts = Todo::whereDate('due_date', $targetDate)
-            ->selectRaw('status, count(*) as count')
-            ->groupBy('status')
+        $statusCounts = Todo::whereDate("due_date", $targetDate)
+            ->selectRaw("status, count(*) as count")
+            ->groupBy("status")
             ->get();
 
         $this->info("Status counts for tasks due on {$targetDate}:");
@@ -41,28 +43,36 @@ class TodoCleanup extends Command
 
         try {
             // 完了したタスクをゴミ箱に移動
-            $completedCount = Todo::where('status', 'completed')
-                ->whereDate('due_date', $targetDate)
-                ->update(['status' => 'trashed']);
+            $completedCount = Todo::where("status", "completed")
+                ->where("location", "TODAY") // TODAY条件を追加
+                ->whereDate("due_date", $targetDate)
+                ->update(["status" => "trashed"]);
 
-            $this->info("完了タスク {$completedCount} 件をゴミ箱に移動しました");
+            $this->info(
+                "完了タスク {$completedCount} 件をゴミ箱に移動しました"
+            );
 
             // 未完了タスクをINBOXに戻す
-            $pendingCount = Todo::where('status', 'pending')
-                ->whereDate('due_date', $targetDate)
+            $pendingCount = Todo::where("status", "pending")
+                ->where("location", "TODAY") // TODAY条件を追加
+                ->whereDate("due_date", $targetDate)
                 ->update([
-                    'location' => 'INBOX',
-                    'due_date' => null,
-                    'due_time' => null
+                    "location" => "INBOX",
+                    "due_date" => null,
+                    "due_time" => null,
                 ]);
 
             $this->info("未完了タスク {$pendingCount} 件をMEMOに戻しました");
 
-            Log::info("Todoタスク整理: 完了タスク {$completedCount} 件をゴミ箱に移動、未完了タスク {$pendingCount} 件をMEMOに戻しました");
+            Log::info(
+                "Todoタスク整理: 完了タスク {$completedCount} 件をゴミ箱に移動、未完了タスク {$pendingCount} 件をMEMOに戻しました"
+            );
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            Log::error("Todoタスク整理中にエラーが発生しました: " . $e->getMessage());
+            Log::error(
+                "Todoタスク整理中にエラーが発生しました: " . $e->getMessage()
+            );
             $this->error("エラーが発生しました: " . $e->getMessage());
 
             return Command::FAILURE;
