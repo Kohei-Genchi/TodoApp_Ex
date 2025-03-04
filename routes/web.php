@@ -16,15 +16,15 @@ Route::get('/', function () {
 })->name('home');
 
 // 簡単ログイン
-Route::get('/guest-login',[GuestLoginController::class, 'login'])
-->middleware('guest')
-->name('guest.login');
+Route::get('/guest-login', [GuestLoginController::class, 'login'])
+    ->middleware('guest')
+    ->name('guest.login');
 
 
 Route::get('/todos', [TodoController::class, 'index'])->name('todos.index');
 
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 
 Route::get('/dashboard', function () {
@@ -55,5 +55,5 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/api/categories', [App\Http\Controllers\Api\CategoryApiController::class, 'store'])
-    ->name('api.categories.store');
+        ->name('api.categories.store');
 });
