@@ -1,5 +1,7 @@
 <!-- resources/views/layouts/navigation.blade.php -->
 <nav class="bg-gray-800 text-white h-full w-64 fixed left-0 top-0 overflow-y-auto">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <div class="p-4">
         @auth
             <div class="flex justify-between items-center mb-6">
@@ -38,7 +40,7 @@
                     <div class="flex items-center bg-gray-700 rounded overflow-hidden">
                         <input type="text" name="title" required placeholder="新しいメモを入力"
                                class="w-full bg-gray-700 px-3 py-2 text-sm focus:outline-none text-white">
-                        <input type="hidden" name="location" value="INBOX">
+
                         <button type="submit" class="px-2 py-2 text-gray-400 hover:text-white">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -53,7 +55,7 @@
                 <div class="flex items-center justify-between mb-2">
                     <div class="text-xs text-gray-400 uppercase tracking-wider">メモ一覧</div>
                     <div class="text-xs bg-gray-600 px-1.5 py-0.5 rounded-full">
-                        {{ Auth::user()->todos()->where('location', 'INBOX')->count() }}
+                        {{ Auth::user()->todos()->whereNull('due_date')->where('status', 'pending')->count() }}
                     </div>
                 </div>
 
@@ -61,9 +63,11 @@
                     @php
                         $memos = Auth::user()->todos()
                             ->with('category')
-                            ->where('location', 'INBOX')
+                            ->whereNull('due_date')
+                            ->where('status', 'pending')
                             ->orderBy('created_at', 'desc')
-                            ->get();
+                                ->orderBy('created_at', 'desc')
+                                ->get();
                     @endphp
 
                     @if($memos->isEmpty())

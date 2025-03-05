@@ -110,68 +110,6 @@ class TodoController extends Controller
         return back()->with("success", "タスクを追加しました");
     }
 
-    public function update(Request $request, Todo $todo)
-    {
-        Log::info('Update method called for todo ID: ' . $todo->id);
-
-        // Handle authentication - return empty array for API and redirect for web
-        if (!Auth::check()) {
-            Log::warning('Unauthenticated access attempt to update todo ' . $todo->id);
-            if ($request->expectsJson()) {
-                // Return 200 for API with empty data to prevent frontend errors
-                return response()->json([], 200);
-            } else {
-                return redirect()->route('login');
-            }
-        }
-
-        // Validate the request
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,id',
-            'due_date' => 'nullable|date',
-            'due_time' => 'nullable|string',
-            'priority' => 'nullable|in:low,medium,high',
-            'recurrence_type' => 'nullable|in:none,daily,weekly,monthly',
-            'recurrence_end_date' => 'nullable|date|after_or_equal:due_date',
-        ]);
-
-        $data = $validated;
-
-        // Set location based on due date
-        if (isset($data["due_date"])) {
-            $data["location"] =
-                $data["due_date"] === now()->format("Y-m-d")
-                    ? "TODAY"
-                    : "SCHEDULED";
-        } else {
-            $data["location"] = "INBOX";
-            $data["due_date"] = null;
-            $data["due_time"] = null;
-        }
-
-        $todo->update($data);
-
-        // Handle recurring tasks
-        if (
-            !empty($data["recurrence_type"]) &&
-            $data["recurrence_type"] !== "none"
-        ) {
-            // Add user_id to data for createRecurringTasks
-            $data["user_id"] = $todo->user_id;
-            $this->createRecurringTasks($data);
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'タスクを更新しました',
-                'todo' => $todo->fresh()
-            ]);
-        }
-
-        return back()->with("success", "タスクを更新しました");
-    }
 
     public function restore(Request $request, Todo $todo)
     {
@@ -347,59 +285,182 @@ class TodoController extends Controller
      */
 
     // API用のタスク一覧取得
-    public function apiIndex(Request $request): JsonResponse
-    {
-        // Default to 'today' view if none specified
-        $view = $request->view ?? "today";
-        $date = $request->date ? now()->parse($request->date) : now();
+    // app/Http/Controllers/TodoController.php
+// Fix for the apiIndex method
 
-        try {
-            // Handle authentication - return empty array for API
-            if (!Auth::check()) {
-                Log::info('Unauthenticated access to todos API - returning empty array');
-                return response()->json([]);
-            }
+public function apiIndex(Request $request): JsonResponse
+{
+    // Default to 'today' view if none specified
+    $view = $request->view ?? "today";
+    $date = $request->date ? now()->parse($request->date) : now();
 
-            $user = Auth::user();
-            Log::info('Fetching todos for user: ' . $user->id);
-
-            // Normal query logic continues...
-            $query = $user->todos()
-                ->with("category")
-                ->where("status", "!=", "trashed");
-
-            // Add view-specific filtering
-            switch ($view) {
-                case "today":
-                    $query->where("location", "TODAY");
-                    break;
-                case "scheduled":
-                    $query->where("location", "SCHEDULED");
-                    break;
-                case "inbox":
-                    $query->where("location", "INBOX");
-                    break;
-                case "completed":
-                    $query->where("status", "completed");
-                    break;
-                case "all":
-                    // No additional filters needed
-                    break;
-                case "date":
-                    // Filter by specific date
-                    $query->whereDate("due_date", $date->format('Y-m-d'));
-                    break;
-            }
-
-            $todos = $query->orderBy("created_at", "desc")->get();
-            return response()->json($todos);
+    try {
+        // Handle authentication - return empty array for API
+        if (!Auth::check()) {
+            Log::info('Unauthenticated access to todos API - returning empty array');
+            return response()->json([]);
         }
-        catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error loading tasks: ' . $e->getMessage()
-            ], 500);
+
+        $user = Auth::user();
+        Log::info('Fetching todos for user: ' . $user->id);
+
+        // Normal query logic continues...
+        $query = $user->todos()
+            ->with("category")
+            ->where("status", "!=", "trashed");
+
+        // Add view-specific filtering
+        switch ($view) {
+            case "today":
+                $query->whereDate("due_date", $request->date ?? now()->format('Y-m-d'))
+                    ->where('status', 'pending');
+                break;
+            case "scheduled":
+                $query->whereNotNull("due_date")
+                    ->whereDate("due_date", ">=", now()->format('Y-m-d'))
+                    ->where('status', 'pending');
+                break;
+            case "inbox":
+                $query->whereNull("due_date");
+                $query->where("status", "pending");
+                break;
+            case "completed":
+                $query->where("status", "completed");
+                break;
+            case "all":
+                // No additional filters needed
+                break;
+            case "calendar":
+                $query->whereBetween("due_date", [
+                    $request->start_date ?? now()->startOfMonth()->format('Y-m-d'),
+                    $request->end_date ?? now()->endOfMonth()->format('Y-m-d')
+                ])->where('status', 'pending');
+                break;
+            case "date":
+                // Filter by specific date
+                $query->whereDate("due_date", $date->format('Y-m-d'));
+                break;
+        }
+
+        $todos = $query->orderBy("created_at", "desc")->get();
+
+        // Log the query results for debugging
+        Log::info('API todos query returned ' . count($todos) . ' results');
+
+        return response()->json($todos);
+    }
+    catch (\Exception $e) {
+        Log::error('Error loading tasks: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'Error loading tasks: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+// Fix for the update method
+public function update(Request $request, Todo $todo)
+{
+    Log::info('Update method called for todo ID: ' . $todo->id);
+
+    // Handle authentication - return empty array for API and redirect for web
+    if (!Auth::check()) {
+        Log::warning('Unauthenticated access attempt to update todo ' . $todo->id);
+        if ($request->expectsJson()) {
+            // Return 200 for API with empty data to prevent frontend errors
+            return response()->json([], 200);
+        } else {
+            return redirect()->route('login');
         }
     }
+
+    // Check if user owns the todo
+    if ($todo->user_id !== Auth::id()) {
+        Log::warning('User ' . Auth::id() . ' attempted to update todo ' . $todo->id . ' belonging to user ' . $todo->user_id);
+        if ($request->expectsJson()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        } else {
+            return redirect()->route('todos.index')->with('error', 'Unauthorized');
+        }
+    }
+
+    // Validate the request
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'category_id' => 'nullable|exists:categories,id',
+        'due_date' => 'nullable|date',
+        'due_time' => 'nullable|string',
+        'priority' => 'nullable|in:low,medium,high',
+        'recurrence_type' => 'nullable|in:none,daily,weekly,monthly',
+        'recurrence_end_date' => 'nullable|date|after_or_equal:due_date',
+    ]);
+
+    $data = $validated;
+
+    // Clear legacy location field and handle null dates
+    $data["location"] = null;
+    if (!isset($data["due_date"])) {
+        $data["due_date"] = null;
+        $data["due_time"] = null;
+    }
+
+    Log::info('Updating todo ' . $todo->id . ' with data: ' . json_encode($data));
+    $todo->update($data);
+
+    // Handle recurring tasks
+    if (
+        !empty($data["recurrence_type"]) &&
+        $data["recurrence_type"] !== "none"
+    ) {
+        // Add user_id to data for createRecurringTasks
+        $data["user_id"] = $todo->user_id;
+        $this->createRecurringTasks($data);
+    }
+
+    if ($request->expectsJson()) {
+        // Return full todo data with relationships
+        $freshTodo = $todo->fresh()->load('category');
+        return response()->json([
+            'message' => 'タスクを更新しました',
+            'todo' => $freshTodo->load('category'),
+            'categories' => Auth::user()->categories()->orderBy('name')->get()
+        ]);
+    }
+
+    return back()->with("success", "タスクを更新しました");
+}
+
+// Fix for the show method
+public function show(Todo $todo)
+{
+    // Handle authentication - return empty array for API and redirect for web
+    if (!Auth::check()) {
+        if (request()->expectsJson()) {
+            // Return 200 for API with empty data to prevent frontend errors
+            return response()->json([]);
+        } else {
+            return redirect()->route('login');
+        }
+    }
+
+    // Check if user owns the todo
+    if ($todo->user_id !== Auth::id()) {
+        if (request()->expectsJson()) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        } else {
+            return redirect()->route('todos.index')->with('error', 'Unauthorized');
+        }
+    }
+
+    if (request()->expectsJson()) {
+        // Include the category relationship
+        $todo->load('category');
+        Log::info('Returning todo ' . $todo->id . ' with category: ' . ($todo->category ? $todo->category->id : 'null'));
+        return response()->json($todo);
+    }
+
+    return view('todos.show', compact('todo'));
+}
 
     // タスクをゴミ箱に移動（API用）
     public function moveToTrash(Todo $todo): JsonResponse
@@ -443,24 +504,7 @@ class TodoController extends Controller
     /**
      * Display the specified todo.
      */
-    public function show(Todo $todo)
-    {
-        // Handle authentication - return empty array for API and redirect for web
-        if (!Auth::check()) {
-            if (request()->expectsJson()) {
-                // Return 200 for API with empty data to prevent frontend errors
-                return response()->json([]);
-            } else {
-                return redirect()->route('login');
-            }
-        }
 
-        if (request()->expectsJson()) {
-            return response()->json($todo->load('category'));
-        }
-
-        return view('todos.show', compact('todo'));
-    }
 
     private function createRecurringTasks(array $data): void
     {

@@ -1,4 +1,6 @@
-// src/api/category.js
+// resources/js/api/category.js
+// Fix for the getCategories method
+
 import axios from 'axios';
 
 export default {
@@ -7,7 +9,13 @@ export default {
      */
     getCategories() {
         console.log('API getCategories called');
-        return axios.get('/api/categories');
+        return axios.get('/api/categories', {
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
     },
 
     /**
@@ -20,7 +28,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.post('/api/categories', categoryData, { headers });
@@ -41,7 +50,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.put(`/api/categories/${id}`, categoryData, { headers });
@@ -62,7 +72,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content'),
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.delete(`/api/categories/${id}`, { headers });

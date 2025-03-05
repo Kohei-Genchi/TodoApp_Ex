@@ -1,5 +1,8 @@
 <?php
 
+// app/Http/Controllers/Api/CategoryApiController.php
+// Fix for category API
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -51,10 +54,13 @@ class CategoryApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        // For unauthenticated access, return empty array instead of 401
+        // For unauthenticated access, return unauthorized error
         if (!Auth::check()) {
-            Log::info('Unauthenticated access to category store API - returning empty array');
-            return response()->json([]);
+            Log::info('Unauthenticated access to category store API - returning unauthorized');
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
         // Validate the request
@@ -105,10 +111,13 @@ class CategoryApiController extends Controller
      */
     public function update(Request $request, Category $category): JsonResponse
     {
-        // For unauthenticated access, return empty array instead of 401
+        // For unauthenticated access, return unauthorized error
         if (!Auth::check()) {
-            Log::info('Unauthenticated access to category update API - returning empty array');
-            return response()->json([]);
+            Log::info('Unauthenticated access to category update API - returning unauthorized');
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
         // Check if the authenticated user owns this category
@@ -160,10 +169,13 @@ class CategoryApiController extends Controller
      */
     public function destroy(Category $category): JsonResponse
     {
-        // For unauthenticated access, return empty array instead of 401
+        // For unauthenticated access, return unauthorized error
         if (!Auth::check()) {
-            Log::info('Unauthenticated access to category destroy API - returning empty array');
-            return response()->json([]);
+            Log::info('Unauthenticated access to category destroy API - returning unauthorized');
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 401);
         }
 
         // Check if the authenticated user owns this category

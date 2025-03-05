@@ -258,25 +258,25 @@ export default {
 
     // Methods
     async function loadTasks() {
-      console.log('Loading tasks for view:', currentView.value, 'date:', currentDate.value);
-      try {
-        const response = await TodoApi.getTasks(currentView.value, currentDate.value);
-        console.log('API response data:', response.data);
+  console.log('Loading tasks for view:', currentView.value, 'date:', currentDate.value);
+  try {
+    const response = await TodoApi.getTasks(currentView.value, currentDate.value);
+    console.log('API response data:', response.data);
 
-        todos.value = response.data.map(todo => {
-          if (todo.due_date) {
-            // Convert date to local timezone format
-            todo.formatted_due_date = formatDateForComparison(todo.due_date);
-          }
-          return todo;
-        });
-
-        console.log('Todos after processing:', todos.value);
-      } catch (error) {
-        console.error('Error loading tasks:', error);
-        notification.value?.show('タスクの読み込みに失敗しました', 'error');
+    todos.value = response.data.map(todo => {
+      if (todo.due_date) {
+        // Convert date to local timezone format
+        todo.formatted_due_date = formatDateForComparison(todo.due_date);
       }
-    }
+      return todo;
+    });
+
+    console.log('Todos after processing:', todos.value);
+  } catch (error) {
+    console.error('Error loading tasks:', error);
+    notification.value?.show('タスクの読み込みに失敗しました', 'error');
+  }
+}
 
     async function loadTrashedTasks() {
       try {
@@ -289,25 +289,25 @@ export default {
     }
 
     async function loadCategories() {
-      console.log('Loading categories...');
-      try {
-        const response = await CategoryApi.getCategories();
-        console.log('Categories API response:', response);
-        console.log('Categories loaded:', response.data);
-        categories.value = response.data || [];
+  console.log('Loading categories...');
+  try {
+    const response = await CategoryApi.getCategories();
+    console.log('Categories API response:', response);
+    console.log('Categories loaded:', response.data);
+    categories.value = response.data || [];
 
-        // Make sure categories are properly formatted for selection
-        categories.value.forEach(cat => {
-          // Ensure id is a number for consistency
-          cat.id = Number(cat.id);
-        });
+    // Make sure categories are properly formatted for selection
+    categories.value.forEach(cat => {
+      // Ensure id is a number for consistency
+      cat.id = Number(cat.id);
+    });
 
-        console.log('Categories processed:', categories.value);
-      } catch (error) {
-        console.error('Error loading categories:', error);
-        notification.value?.show('カテゴリーの読み込みに失敗しました', 'error');
-      }
-    }
+    console.log('Categories processed:', categories.value);
+  } catch (error) {
+    console.error('Error loading categories:', error);
+    notification.value?.show('カテゴリーの読み込みに失敗しました', 'error');
+  }
+}
 
     function setView(view) {
       currentView.value = view;
@@ -382,101 +382,101 @@ export default {
     }
 
     async function openEditTaskModal(task) {
-      try {
-        console.log('OpenEditTaskModal called with:', task);
+  try {
+    console.log('OpenEditTaskModal called with:', task);
 
-        // Handle direct ID input (as number or string)
-        if ((typeof task === 'number' || typeof task === 'string') && !isNaN(Number(task))) {
-          const taskId = Number(task);
-          console.log('Task is a direct ID:', taskId);
-          await fetchAndEditTask(taskId);
-          return;
-        }
-
-        // Handle case where task might be empty array or undefined
-        if (!task || (Array.isArray(task) && task.length === 0)) {
-          console.error('Task is empty or invalid:', task);
-          notification.value?.show('編集するタスクが見つかりません', 'error');
-          return;
-        }
-
-        // Handle case where task is an object with an ID property
-        if (typeof task === 'object' && task !== null) {
-          // If we only have an ID, fetch the full task data
-          if (task.id !== undefined && task.id !== null && (!task.title || typeof task.title !== 'string')) {
-            await fetchAndEditTask(task.id);
-            return;
-          }
-
-          // Force reload categories before opening modal
-          await loadCategories();
-          console.log('Categories refreshed before opening modal:', categories.value);
-
-          taskModalMode.value = 'edit';
-
-          // Make sure task ID is properly set
-          if (task.id === undefined || task.id === null) {
-            console.error('Task object has no ID:', task);
-            notification.value?.show('タスクIDが見つかりません', 'error');
-            return;
-          }
-
-          selectedTaskId.value = Number(task.id);
-          console.log('Selected task ID set to:', selectedTaskId.value);
-
-          // Make a deep copy of the task to avoid reference issues
-          selectedTaskData.value = JSON.parse(JSON.stringify(task));
-
-          // Log the data being passed to the modal
-          console.log('Data being passed to TaskModal:', {
-            mode: taskModalMode.value,
-            todoId: selectedTaskId.value,
-            todoData: selectedTaskData.value,
-            categories: categories.value
-          });
-
-          showTaskModal.value = true;
-        }
-      } catch (error) {
-        console.error('Error in openEditTaskModal:', error);
-        notification.value?.show('タスク編集の準備中にエラーが発生しました', 'error');
-      }
+    // Handle direct ID input (as number or string)
+    if ((typeof task === 'number' || typeof task === 'string') && !isNaN(Number(task))) {
+      const taskId = Number(task);
+      console.log('Task is a direct ID:', taskId);
+      await fetchAndEditTask(taskId);
+      return;
     }
+
+    // Handle case where task might be empty array or undefined
+    if (!task || (Array.isArray(task) && task.length === 0)) {
+      console.error('Task is empty or invalid:', task);
+      notification.value?.show('編集するタスクが見つかりません', 'error');
+      return;
+    }
+
+    // Handle case where task is an object with an ID property
+    if (typeof task === 'object' && task !== null) {
+      // Force reload categories before opening modal
+      await loadCategories();
+      console.log('Categories refreshed before opening modal:', categories.value);
+
+      taskModalMode.value = 'edit';
+
+      // Make sure task ID is properly set
+      if (task.id === undefined || task.id === null) {
+        console.error('Task object has no ID:', task);
+        notification.value?.show('タスクIDが見つかりません', 'error');
+        return;
+      }
+
+      selectedTaskId.value = Number(task.id);
+      console.log('Selected task ID set to:', selectedTaskId.value);
+
+      // Make a deep copy of the task to avoid reference issues
+      selectedTaskData.value = JSON.parse(JSON.stringify(task));
+
+      // Log the data being passed to the modal
+      console.log('Data being passed to TaskModal:', {
+        mode: taskModalMode.value,
+        todoId: selectedTaskId.value,
+        todoData: selectedTaskData.value,
+        categories: categories.value
+      });
+
+      showTaskModal.value = true;
+    }
+  } catch (error) {
+    console.error('Error in openEditTaskModal:', error);
+    notification.value?.show('タスク編集の準備中にエラーが発生しました', 'error');
+  }
+}
+
 
     // Helper function to fetch task data by ID and open edit modal
     async function fetchAndEditTask(taskId) {
-      console.log('Fetching task data for ID:', taskId);
+  console.log('Fetching task data for ID:', taskId);
 
-      try {
-        // First check if we have this task already loaded
-        const task = todos.value.find(t => t.id === taskId) ||
-                    trashedTodos.value.find(t => t.id === taskId);
+  try {
+    // First check if we have this task already loaded
+    const task = todos.value.find(t => t.id === taskId) ||
+                trashedTodos.value.find(t => t.id === taskId);
 
-        if (task) {
-          console.log('Found task in local data:', task);
-          await loadCategories();
-          taskModalMode.value = 'edit';
-          selectedTaskId.value = Number(taskId);
-          selectedTaskData.value = JSON.parse(JSON.stringify(task));
-          showTaskModal.value = true;
-          return;
-        }
+    if (task) {
+      console.log('Found task in local data:', task);
+      // First, ensure categories are loaded
+      await loadCategories();
 
-        // Fetch the task data from API
-        console.log('Task not found locally, fetching from API...');
-        const response = await TodoApi.getTaskById(taskId);
-        console.log('Task data fetched from API:', response.data);
-
-        await loadCategories();
-        taskModalMode.value = 'edit';
-        selectedTaskId.value = Number(taskId);
-        selectedTaskData.value = response.data;
-        showTaskModal.value = true;
-      } catch (error) {
-        console.error('Error fetching task data:', error);
-        notification.value?.show('タスクデータの取得に失敗しました', 'error');
-      }
+      taskModalMode.value = 'edit';
+      selectedTaskId.value = Number(taskId);
+      selectedTaskData.value = JSON.parse(JSON.stringify(task));
+      showTaskModal.value = true;
+      return;
     }
+
+    // Fetch the task data from API
+    console.log('Task not found locally, fetching from API...');
+    const response = await TodoApi.getTaskById(taskId);
+    console.log('Task data fetched from API:', response.data);
+
+    // Ensure categories are loaded
+    await loadCategories();
+
+    taskModalMode.value = 'edit';
+    selectedTaskId.value = Number(taskId);
+    selectedTaskData.value = response.data;
+    showTaskModal.value = true;
+  } catch (error) {
+    console.error('Error fetching task data:', error);
+    notification.value?.show('タスクデータの取得に失敗しました', 'error');
+  }
+}
+
 
     function closeTaskModal() {
       console.log('Closing task modal');
@@ -504,58 +504,59 @@ export default {
     }
 
     async function submitTask(taskData) {
-      try {
-        console.log('submitTask called with:', taskData);
+  try {
+    console.log('submitTask called with:', taskData);
 
-        // Clone task data to avoid modifying the original
-        const preparedData = { ...taskData };
+    // Clone task data to avoid modifying the original
+    const preparedData = { ...taskData };
 
-        // Format dates correctly for the API
-        if (preparedData.due_date) {
-          preparedData.due_date = formatDateForAPI(preparedData.due_date);
-        }
-
-        if (preparedData.recurrence_end_date) {
-          preparedData.recurrence_end_date = formatDateForAPI(preparedData.recurrence_end_date);
-        }
-
-        console.log('Submitting task with prepared data:', preparedData);
-        console.log('Task mode:', taskModalMode.value, 'Selected task ID:', selectedTaskId.value);
-
-        if (taskModalMode.value === 'add') {
-          // New task addition
-          console.log('Creating new task with TodoApi.createTask()');
-          const response = await TodoApi.createTask(preparedData);
-          console.log('Task created response:', response);
-          notification.value.show('タスクを追加しました');
-        } else {
-          // Ensure task ID is available before updating
-          const taskId = selectedTaskId.value || (preparedData.id ? Number(preparedData.id) : null);
-
-          if (!taskId && taskId !== 0) {
-            console.error('No task ID available for update');
-            notification.value.show('タスクの更新に失敗しました: タスクIDが見つかりません', 'error');
-            return;
-          }
-
-          // Update existing task
-          console.log(`Updating task ID ${taskId} with TodoApi.updateTask()`);
-          const response = await TodoApi.updateTask(taskId, preparedData);
-          console.log('Task updated response:', response);
-          notification.value.show('タスクを更新しました');
-        }
-
-        closeTaskModal();
-        if (currentView.value === 'trash') {
-          loadTrashedTasks();
-        } else {
-          loadTasks();
-        }
-      } catch (error) {
-        console.error('Error submitting task:', error);
-        notification.value.show('タスクの保存に失敗しました', 'error');
-      }
+    // Format dates correctly for the API
+    if (preparedData.due_date) {
+      preparedData.due_date = formatDateForAPI(preparedData.due_date);
     }
+
+    if (preparedData.recurrence_end_date) {
+      preparedData.recurrence_end_date = formatDateForAPI(preparedData.recurrence_end_date);
+    }
+
+    console.log('Submitting task with prepared data:', preparedData);
+    console.log('Task mode:', taskModalMode.value, 'Selected task ID:', selectedTaskId.value);
+
+    if (taskModalMode.value === 'add') {
+      // New task addition
+      console.log('Creating new task with TodoApi.createTask()');
+      const response = await TodoApi.createTask(preparedData);
+      console.log('Task created response:', response);
+      notification.value.show('タスクを追加しました');
+    } else {
+      // Ensure task ID is available before updating
+      const taskId = selectedTaskId.value || (preparedData.id ? Number(preparedData.id) : null);
+
+      if (!taskId && taskId !== 0) {
+        console.error('No task ID available for update');
+        notification.value.show('タスクの更新に失敗しました: タスクIDが見つかりません', 'error');
+        return;
+      }
+
+      // Update existing task
+      console.log(`Updating task ID ${taskId} with TodoApi.updateTask()`);
+      const response = await TodoApi.updateTask(taskId, preparedData);
+      console.log('Task updated response:', response);
+      notification.value.show('タスクを更新しました');
+    }
+
+    closeTaskModal();
+    if (currentView.value === 'trash') {
+      loadTrashedTasks();
+    } else {
+      // After updating a task, we need to reload all tasks to make sure we see the changes
+      loadTasks();
+    }
+  } catch (error) {
+    console.error('Error submitting task:', error);
+    notification.value.show('タスクの保存に失敗しました', 'error');
+  }
+}
 
     async function toggleTaskStatus(task) {
       try {

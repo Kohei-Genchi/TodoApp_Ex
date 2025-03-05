@@ -1,11 +1,19 @@
-// src/api/todo.js
+// resources/js/api/todo.js
+// Fix for API request headers and error handling
+
 import axios from 'axios';
 
 export default {
     // ビューと日付に基づいてタスクを取得
     getTasks(view, date) {
         console.log('API getTasks called with:', { view, date });
-        return axios.get(`/api/todos`, { params: { view, date } });
+        return axios.get(`/api/todos`, {
+            params: { view, date },
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
     },
 
     // タスクをIDで取得
@@ -15,7 +23,12 @@ export default {
             console.error('Error: getTaskById called without an ID');
             return Promise.reject(new Error('No task ID provided'));
         }
-        return axios.get(`/api/todos/${id}`);
+        return axios.get(`/api/todos/${id}`, {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
     },
 
     // 新しいタスクを作成
@@ -32,7 +45,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         console.log('Creating task with headers:', headers);
@@ -59,7 +73,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         console.log('Updating task with headers:', headers);
@@ -68,7 +83,11 @@ export default {
         const url = `/api/todos/${id}`;
         console.log('PUT request to URL:', url);
 
-        return axios.put(url, taskData, { headers });
+        return axios.put(url, taskData, { headers })
+            .catch(error => {
+                console.error('Error in updateTask:', error.response || error);
+                throw error;
+            });
     },
 
     // タスクの完了状態をトグル
@@ -90,7 +109,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.patch(`/api/todos/${id}/toggle`, {}, { headers });
@@ -115,7 +135,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.patch(`/api/todos/${id}/trash`, {}, { headers });
@@ -140,7 +161,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.patch(`/api/todos/${id}/restore`, {}, { headers });
@@ -165,7 +187,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.delete(`/api/todos/${id}`, {
@@ -188,7 +211,8 @@ export default {
         const headers = {
             'X-CSRF-TOKEN': csrfToken,
             'Accept': 'application/json',
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
         };
 
         return axios.delete('/api/todos/trash/empty', { headers });
@@ -197,6 +221,11 @@ export default {
     // ゴミ箱内のタスクを取得
     getTrashedTasks() {
         console.log('API getTrashedTasks called');
-        return axios.get('/api/todos/trashed');
+        return axios.get('/api/todos/trashed', {
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
     }
 };

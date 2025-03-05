@@ -130,72 +130,20 @@
   <script>
   import { ref, reactive, watch, onMounted, nextTick } from 'vue';
 
-  export default {
-    props: {
-      mode: {
-        type: String,
-        default: 'add',
-        validator: (value) => ['add', 'edit'].includes(value)
-      },
-      todoId: {
-        type: Number,
-        default: null
-      },
-      todoData: {
-        type: Object,
-        default: () => ({
-          title: '',
-          description: '',
-          due_date: '',
-          due_time: '',
-          category_id: '',
-          recurrence_type: 'none',
-          recurrence_end_date: ''
-        })
-      },
-      categories: {
-        type: Array,
-        default: () => []
-      },
-      currentDate: {
-        type: String,
-        default: ''
-      },
-      currentView: {
-        type: String,
-        default: 'today'
-      }
+export default {
+  props: {
+    mode: {
+      type: String,
+      default: 'add',
+      validator: (value) => ['add', 'edit'].includes(value)
     },
-
-    emits: ['close', 'submit', 'delete', 'category-created'],
-
-    setup(props, { emit }) {
-      console.log('TaskModal setup - Mode:', props.mode);
-      console.log('Categories received:', props.categories);
-      console.log('todoData received:', props.todoData);
-      console.log('todoId received:', props.todoId);
-
-      // Helper function to format dates
-      function formatDateString(dateStr) {
-        if (!dateStr) return '';
-
-        try {
-          // Check if already in YYYY-MM-DD format
-          if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
-            return dateStr;
-          }
-
-          // Convert ISO date string to local date format
-          const date = new Date(dateStr);
-          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-        } catch (e) {
-          console.error('Error formatting date:', e, dateStr);
-          return '';
-        }
-      }
-
-      // Form data - initialize with default values
-      const form = reactive({
+    todoId: {
+      type: Number,
+      default: null
+    },
+    todoData: {
+      type: Object,
+      default: () => ({
         title: '',
         description: '',
         due_date: '',
@@ -203,231 +151,296 @@
         category_id: '',
         recurrence_type: 'none',
         recurrence_end_date: ''
-      });
+      })
+    },
+    categories: {
+      type: Array,
+      default: () => []
+    },
+    currentDate: {
+      type: String,
+      default: ''
+    },
+    currentView: {
+      type: String,
+      default: 'today'
+    }
+  },
+
+  emits: ['close', 'submit', 'delete', 'category-created'],
+
+  setup(props, { emit }) {
+    console.log('TaskModal setup - Mode:', props.mode);
+    console.log('Categories received:', props.categories);
+    console.log('todoData received:', props.todoData);
+    console.log('todoId received:', props.todoId);
+
+    // Helper function to format dates
+    function formatDateString(dateStr) {
+      if (!dateStr) return '';
+
+      try {
+        // Check if already in YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return dateStr;
+        }
+
+        // Convert ISO date string to local date format
+        const date = new Date(dateStr);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+      } catch (e) {
+        console.error('Error formatting date:', e, dateStr);
+        return '';
+      }
+    }
+
+      // Form data - initialize with default values
+      const form = reactive({
+      title: '',
+      description: '',
+      due_date: '',
+      due_time: '',
+      category_id: '',
+      recurrence_type: 'none',
+      recurrence_end_date: ''
+    });
 
       // New category form
       const showCategoryInput = ref(false);
-      const newCategory = reactive({
-        name: '',
-        color: '#3b82f6'
-      });
+    const newCategory = reactive({
+      name: '',
+      color: '#3b82f6'
+    });
 
       // Initialize form data based on todoData prop
       function initializeForm() {
-        console.log('Initializing form with data:', props.todoData);
+      console.log('Initializing form with data:', props.todoData);
 
-        if (!props.todoData) {
-          console.warn('TodoData is null or undefined');
+      if (!props.todoData) {
+        console.warn('TodoData is null or undefined');
 
-          // Set defaults for new task
-          if (props.mode === 'add') {
-            form.title = '';
-            form.description = '';
-            form.due_date = props.currentDate || '';
-            form.due_time = '';
-            form.category_id = '';
-            form.recurrence_type = 'none';
-            form.recurrence_end_date = '';
-          }
-          return;
+        // Set defaults for new task
+        if (props.mode === 'add') {
+          form.title = '';
+          form.description = '';
+          form.due_date = props.currentDate || '';
+          form.due_time = '';
+          form.category_id = '';
+          form.recurrence_type = 'none';
+          form.recurrence_end_date = '';
         }
+        return;
+      }
 
-        // Set the title and description
-        form.title = props.todoData.title || '';
-        form.description = props.todoData.description || '';
+      // Set the title and description
+      form.title = props.todoData.title || '';
+      form.description = props.todoData.description || '';
 
-        // Format dates properly for form inputs
-        form.due_date = props.todoData.due_date ? formatDateString(props.todoData.due_date) : '';
+      // Format dates properly for form inputs
+      form.due_date = props.todoData.due_date ? formatDateString(props.todoData.due_date) : '';
+
 
         // Handle time from ISO string
         if (props.todoData.due_time) {
-          if (typeof props.todoData.due_time === 'string' && props.todoData.due_time.includes('T')) {
-            const timeDate = new Date(props.todoData.due_time);
-            form.due_time = `${String(timeDate.getHours()).padStart(2, '0')}:${String(timeDate.getMinutes()).padStart(2, '0')}`;
+        if (typeof props.todoData.due_time === 'string' && props.todoData.due_time.includes('T')) {
+          const timeDate = new Date(props.todoData.due_time);
+          form.due_time = `${String(timeDate.getHours()).padStart(2, '0')}:${String(timeDate.getMinutes()).padStart(2, '0')}`;
+        } else {
+          // Try to extract just time part if it's in HH:MM:SS format
+          const timeParts = props.todoData.due_time.split(':');
+          if (timeParts.length >= 2) {
+            form.due_time = `${timeParts[0]}:${timeParts[1]}`;
           } else {
-            // Try to extract just time part if it's in HH:MM:SS format
-            const timeParts = props.todoData.due_time.split(':');
-            if (timeParts.length >= 2) {
-              form.due_time = `${timeParts[0]}:${timeParts[1]}`;
-            } else {
-              form.due_time = props.todoData.due_time;
-            }
+            form.due_time = props.todoData.due_time;
           }
-        } else {
-          form.due_time = '';
         }
-
-        // Make sure category_id is properly handled (as a string for select element)
-        if (props.todoData.category_id !== null && props.todoData.category_id !== undefined) {
-          form.category_id = String(props.todoData.category_id);
-          console.log('Setting category_id to:', form.category_id);
-        } else {
-          form.category_id = '';
-        }
-
-        form.recurrence_type = props.todoData.recurrence_type || 'none';
-        form.recurrence_end_date = props.todoData.recurrence_end_date ?
-                                  formatDateString(props.todoData.recurrence_end_date) : '';
-
-        console.log('Form initialized with:', { ...form });
+      } else {
+        form.due_time = '';
       }
 
-      // Watch for prop changes and initialize form
-      watch(() => props.todoData, (newData) => {
-        console.log('TodoData changed:', newData);
-        nextTick(() => {
-          initializeForm();
-        });
-      }, { immediate: true, deep: true });
-
-      // Watch for mode changes
-      watch(() => props.mode, (newMode) => {
-        console.log('Mode changed to:', newMode);
-        nextTick(() => {
-          initializeForm();
-        });
-      }, { immediate: true });
-
-      // Set default date based on current view
-      watch(() => props.currentDate, (newDate) => {
-        if (props.mode === 'add' && !form.due_date && newDate) {
-          form.due_date = formatDateString(newDate);
-        }
-      }, { immediate: true });
-
-      // Watch for categories changes and log them
-      watch(() => props.categories, (newCategories) => {
-        console.log('Categories updated:', newCategories);
-      }, { deep: true });
-
-      // Initialize form when component mounts
-      onMounted(() => {
-        console.log('TaskModal mounted - TodoID:', props.todoId, 'Mode:', props.mode);
-        console.log('Categories on mount:', props.categories);
-
-        // Initialize form data
-        nextTick(() => {
-          initializeForm();
-        });
-      });
-
-      // Form submission
-      function submitForm() {
-        console.log('Submit button clicked');
-        console.log('Submitting form with data:', { ...form });
-        console.log('Task ID from props:', props.todoId);
-
-        if (!form.title.trim()) {
-          alert('タイトルを入力してください');
-          return;
-        }
-
-        // Prepare data for submission
-        const formData = { ...form };
-
-        // Convert category_id to number if it's a string and not empty
-        if (formData.category_id !== '' && formData.category_id !== null) {
-          formData.category_id = Number(formData.category_id);
-        } else {
-          // Ensure it's null and not an empty string
-          formData.category_id = null;
-        }
-
-        console.log('Processed form data for submission:', formData);
-
-        // Include task ID in the submission for edit mode
-        if (props.mode === 'edit' && props.todoId) {
-          console.log('Emitting submit event with task ID:', props.todoId);
-          formData.id = props.todoId;
-        }
-
-        emit('submit', formData);
+      // Make sure category_id is properly handled (as a string for select element)
+      if (props.todoData.category_id !== null && props.todoData.category_id !== undefined) {
+        form.category_id = String(props.todoData.category_id);
+        console.log('Setting category_id to:', form.category_id);
+      } else {
+        form.category_id = '';
       }
 
-      // Create new category
-      async function createCategory() {
-        if (!newCategory.name.trim()) {
-          alert('カテゴリー名を入力してください');
-          return;
-        }
+      form.recurrence_type = props.todoData.recurrence_type || 'none';
+      form.recurrence_end_date = props.todoData.recurrence_end_date ?
+                                formatDateString(props.todoData.recurrence_end_date) : '';
 
-        console.log('Creating category:', newCategory);
-
-        try {
-          // Get CSRF token
-          const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-          // Make direct fetch request
-          const response = await fetch('/api/categories', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-TOKEN': csrf,
-              'Accept': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-              name: newCategory.name.trim(),
-              color: newCategory.color
-            })
-          });
-
-          // Check for errors
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Error creating category');
-          }
-
-          // Parse response
-          const data = await response.json();
-          console.log('Category created successfully:', data);
-
-          // Set the new category as selected
-          form.category_id = String(data.id);
-
-          // Hide the category form
-          showCategoryInput.value = false;
-
-          // Emit event to refresh categories
-          emit('category-created');
-
-          // Reset form
-          newCategory.name = '';
-          newCategory.color = '#3b82f6';
-
-          // Show success message
-          alert('カテゴリーが作成されました');
-        } catch (error) {
-          console.error('Error creating category:', error);
-          alert('カテゴリーの作成に失敗しました: ' + error.message);
-        }
-      }
-
-      // Delete task
-      function deleteTask() {
-        console.log('Delete task button clicked for task ID:', props.todoId);
-
-        if (!props.todoId) {
-          console.error('No task ID found');
-          return;
-        }
-
-        // Use confirm dialog if task has recurrence
-        const shouldDeleteAllRecurring = form.recurrence_type && form.recurrence_type !== 'none' ?
-          confirm('このタスクは繰り返し設定されています。すべての繰り返しタスクを削除しますか？') : false;
-
-        console.log('Emitting delete event with id:', props.todoId, 'deleteAllRecurring:', shouldDeleteAllRecurring);
-        emit('delete', props.todoId, shouldDeleteAllRecurring);
-      }
-
-      return {
-        form,
-        showCategoryInput,
-        newCategory,
-        submitForm,
-        createCategory,
-        deleteTask
-      };
+      console.log('Form initialized with:', { ...form });
     }
-  };
-  </script>
+
+    // Watch for prop changes and initialize form
+    watch(() => props.todoData, (newData) => {
+      console.log('TodoData changed:', newData);
+      nextTick(() => {
+        initializeForm();
+      });
+    }, { immediate: true, deep: true });
+
+    // Watch for mode changes
+    watch(() => props.mode, (newMode) => {
+      console.log('Mode changed to:', newMode);
+      nextTick(() => {
+        initializeForm();
+      });
+    }, { immediate: true });
+
+    // Set default date based on current view
+    watch(() => props.currentDate, (newDate) => {
+      if (props.mode === 'add' && !form.due_date && newDate) {
+        form.due_date = formatDateString(newDate);
+      }
+    }, { immediate: true });
+
+    // Watch for categories changes and log them
+    watch(() => props.categories, (newCategories) => {
+      console.log('Categories updated in TaskModal:', newCategories);
+    }, { deep: true });
+
+    // Initialize form when component mounts
+    onMounted(() => {
+      console.log('TaskModal mounted - TodoID:', props.todoId, 'Mode:', props.mode);
+      console.log('Categories on mount:', props.categories);
+
+      // Initialize form data
+      nextTick(() => {
+        initializeForm();
+      });
+    });
+
+    // Form submission
+    function submitForm() {
+      console.log('Submit button clicked');
+      console.log('Submitting form with data:', { ...form });
+      console.log('Task ID from props:', props.todoId);
+
+      if (!form.title.trim()) {
+        alert('タイトルを入力してください');
+        return;
+      }
+
+      // Prepare data for submission
+      const formData = { ...form };
+
+      // Convert category_id to number if it's a string and not empty
+      if (formData.category_id !== '' && formData.category_id !== null) {
+        formData.category_id = Number(formData.category_id);
+      } else {
+        // Ensure it's null and not an empty string
+        formData.category_id = null;
+      }
+
+      console.log('Processed form data for submission:', formData);
+
+      // Include task ID in the submission for edit mode
+      if (props.mode === 'edit' && props.todoId) {
+        console.log('Emitting submit event with task ID:', props.todoId);
+        formData.id = props.todoId;
+      }
+
+      // Close modal after submission
+      // Emit with full category data
+      // Update existing todo in the list
+      const updatedTodo = {
+        ...formData,
+        category: props.categories.find(c => c.id === formData.category_id)
+      };
+
+      emit('submit', updatedTodo);
+      emit('update:todos', updatedTodo);
+      emit('update:categories', response.data.categories);
+      emit('close');
+    }
+
+    // Create new category
+    async function createCategory() {
+      if (!newCategory.name.trim()) {
+        alert('カテゴリー名を入力してください');
+        return;
+      }
+
+      console.log('Creating category:', newCategory);
+
+      try {
+        // Get CSRF token
+        const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+        // Make direct fetch request
+        const response = await fetch('/api/categories', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: JSON.stringify({
+            name: newCategory.name.trim(),
+            color: newCategory.color
+          })
+        });
+
+        // Check for errors
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Error creating category');
+        }
+
+        // Parse response
+        const data = await response.json();
+        console.log('Category created successfully:', data);
+
+        // Set the new category as selected
+        form.category_id = String(data.id);
+
+        // Hide the category form
+        showCategoryInput.value = false;
+
+        // Emit event to refresh categories
+        emit('category-created');
+
+        // Reset form
+        newCategory.name = '';
+        newCategory.color = '#3b82f6';
+
+        // Show success message
+        alert('カテゴリーが作成されました');
+      } catch (error) {
+        console.error('Error creating category:', error);
+        alert('カテゴリーの作成に失敗しました: ' + error.message);
+      }
+    }
+
+    // Delete task
+    function deleteTask() {
+      console.log('Delete task button clicked for task ID:', props.todoId);
+
+      if (!props.todoId) {
+        console.error('No task ID found');
+        return;
+      }
+
+      // Use confirm dialog if task has recurrence
+      const shouldDeleteAllRecurring = form.recurrence_type && form.recurrence_type !== 'none' ?
+        confirm('このタスクは繰り返し設定されています。すべての繰り返しタスクを削除しますか？') : false;
+
+      console.log('Emitting delete event with id:', props.todoId, 'deleteAllRecurring:', shouldDeleteAllRecurring);
+      emit('delete', props.todoId, shouldDeleteAllRecurring);
+    }
+
+    return {
+      form,
+      showCategoryInput,
+      newCategory,
+      submitForm,
+      createCategory,
+      deleteTask
+    };
+  }
+};
+
+</script>

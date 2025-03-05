@@ -1,4 +1,6 @@
-// app.js
+// resources/js/app.js
+// Fix for initialization and window.editTodo function
+
 import './bootstrap';
 
 import Alpine from 'alpinejs';
