@@ -1,77 +1,90 @@
 <template>
     <div>
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-            <!-- Calendar header -->
+            <!-- Calendar header - smaller to save space -->
             <div
                 class="grid grid-cols-7 text-center text-xs text-gray-700 bg-gray-100"
             >
-                <div class="py-2 text-red-600 font-medium">日</div>
-                <div class="py-2 font-medium">月</div>
-                <div class="py-2 font-medium">火</div>
-                <div class="py-2 font-medium">水</div>
-                <div class="py-2 font-medium">木</div>
-                <div class="py-2 font-medium">金</div>
-                <div class="py-2 text-blue-600 font-medium">土</div>
+                <div class="py-1 text-red-600 font-medium">日</div>
+                <div class="py-1 font-medium">月</div>
+                <div class="py-1 font-medium">火</div>
+                <div class="py-1 font-medium">水</div>
+                <div class="py-1 font-medium">木</div>
+                <div class="py-1 font-medium">金</div>
+                <div class="py-1 text-blue-600 font-medium">土</div>
             </div>
 
-            <!-- Calendar grid with smaller fixed height -->
+            <!-- Calendar grid with optimized height -->
             <div class="grid grid-cols-7 border-t border-l border-gray-200">
                 <div
                     v-for="(day, index) in calendarDays"
                     :key="index"
                     @click="selectDate(day.date)"
                     :class="[
-                        'h-16 p-1 border-r border-b border-gray-200 relative',
+                        'h-20 p-1 border-r border-b border-gray-200 relative',
                         day.isCurrentMonth ? 'bg-white' : 'bg-gray-50',
                         day.isToday ? 'bg-yellow-50' : '',
                         day.isSelected ? 'bg-blue-50' : '',
                     ]"
                 >
-                    <!-- Day number -->
-                    <div
-                        :class="[
-                            'text-center text-xs py-0.5',
-                            !day.isCurrentMonth ? 'text-gray-400' : '',
-                            day.isToday
-                                ? 'font-bold bg-yellow-100 rounded-full w-5 h-5 mx-auto flex items-center justify-center'
-                                : '',
-                            day.date.split('-')[2] === '01' ? 'font-bold' : '', // Bold 1st of month
-                        ]"
-                    >
-                        {{ parseInt(day.date.split("-")[2]) }}
-                    </div>
+                    <!-- Day number (smaller & in corner) -->
+                    <div class="flex justify-between items-start">
+                        <div
+                            :class="[
+                                'text-xs',
+                                !day.isCurrentMonth ? 'text-gray-400' : '',
+                                day.isToday
+                                    ? 'font-bold bg-yellow-100 rounded-full w-4 h-4 flex items-center justify-center'
+                                    : '',
+                                day.date.split('-')[2] === '01'
+                                    ? 'font-bold'
+                                    : '',
+                            ]"
+                        >
+                            {{ parseInt(day.date.split("-")[2]) }}
+                        </div>
 
-                    <!-- Tasks for this day (limited to 1 for even more compact view) -->
-                    <div class="mt-0.5">
+                        <!-- Task count badge -->
                         <div
                             v-if="day.todos.length > 0"
+                            class="text-xs bg-blue-100 text-blue-800 px-1 rounded-full"
+                        >
+                            {{ day.todos.length }}
+                        </div>
+                    </div>
+
+                    <!-- Tasks for this day (limited to 2) -->
+                    <div class="mt-1 space-y-0.5">
+                        <div
+                            v-for="todo in day.todos.slice(0, 2)"
+                            :key="todo.id"
                             :class="[
-                                'flex items-center px-0.5 rounded text-xs hover:bg-gray-100 mb-0.5 truncate',
-                                day.todos[0].status === 'completed'
+                                'flex items-center rounded text-xs hover:bg-gray-100 truncate',
+                                todo.status === 'completed'
                                     ? 'text-gray-400 line-through'
                                     : '',
                             ]"
                             :style="{
                                 borderLeft:
                                     '2px solid ' +
-                                    (day.todos[0].category
-                                        ? day.todos[0].category.color
+                                    (todo.category
+                                        ? todo.category.color
                                         : '#ddd'),
                             }"
-                            @click.stop="editTask(day.todos[0])"
+                            @click.stop="editTask(todo)"
                         >
                             <span class="truncate pl-0.5 text-xs">
-                                {{ day.todos[0].title }}
+                                {{ todo.title }}
                             </span>
                         </div>
 
-                        <!-- Show count if more than 1 task -->
+                        <!-- Simplified "more" indicator -->
                         <div
-                            v-if="day.todos.length > 1"
-                            class="text-xs text-blue-500 text-center bg-blue-50 py-0 rounded cursor-pointer hover:bg-blue-100"
+                            v-if="day.todos.length > 2"
+                            class="text-xs text-blue-500 cursor-pointer hover:underline"
                             @click.stop="viewAllTasks(day.date)"
                         >
-                            +{{ day.todos.length - 1 }}
+                            +{{ day.todos.length - 2 }}
                         </div>
                     </div>
                 </div>

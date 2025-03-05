@@ -2,8 +2,8 @@
     <div class="bg-gray-100 min-h-screen main-content">
         <!-- ヘッダー（「+ 新しいタスク」ボタンを含む） -->
         <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
-                <div class="flex flex-col space-y-2">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <div class="flex flex-col space-y-1">
                     <!-- App Title and View Selector Row -->
                     <div class="flex justify-between items-center">
                         <h1 class="text-xl font-semibold text-gray-900">
@@ -52,7 +52,7 @@
                     <div v-if="currentView !== 'trash'">
                         <button
                             @click="openAddTaskModal"
-                            class="w-full py-1.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            class="w-full py-1 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
                             + 新しいタスク
                         </button>
@@ -61,11 +61,11 @@
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <!-- 日付ナビゲーション -->
             <div
                 v-if="currentView !== 'calendar' && currentView !== 'trash'"
-                class="mb-4 flex justify-between items-center"
+                class="mb-2 flex justify-between items-center"
             >
                 <button
                     @click="previousDay"
@@ -89,7 +89,7 @@
             <!-- カレンダー月ナビゲーション -->
             <div
                 v-if="currentView === 'calendar'"
-                class="mb-4 flex justify-between items-center"
+                class="mb-2 flex justify-between items-center"
             >
                 <button
                     @click="previousMonth"
@@ -113,11 +113,11 @@
             <!-- ゴミ箱を空にするボタン -->
             <div
                 v-if="currentView === 'trash' && trashedTodos.length > 0"
-                class="mb-4"
+                class="mb-2"
             >
                 <button
                     @click="confirmEmptyTrash"
-                    class="w-full py-1.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    class="w-full py-1 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                     ゴミ箱を空にする
                 </button>
