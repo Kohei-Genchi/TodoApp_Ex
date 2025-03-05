@@ -1,199 +1,216 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm overflow-hidden">
-    <!-- カレンダーグリッド -->
-    <div class="grid grid-cols-7 text-center">
-      <!-- 曜日ヘッダー -->
-      <div v-for="(day, index) in weekDays" :key="index" class="py-2 bg-gray-50 font-medium text-gray-700">
-        {{ day }}
+    <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+      <!-- Calendar grid -->
+      <div class="grid grid-cols-7 text-center text-xs text-gray-700 bg-gray-100">
+        <div class="py-2 text-red-600">日</div>
+        <div class="py-2">月</div>
+        <div class="py-2">火</div>
+        <div class="py-2">水</div>
+        <div class="py-2">木</div>
+        <div class="py-2">金</div>
+        <div class="py-2 text-blue-600">土</div>
       </div>
 
-      <!-- 日付セル -->
-      <div v-for="(day, index) in calendarDays" :key="index"
-           @click="selectDate(day.date)"
-           :class="[
-             'min-h-[100px] p-2 border border-gray-100',
-             day.isCurrentMonth ? 'bg-white' : 'bg-gray-50 text-gray-400',
-             day.isToday ? 'border-blue-300' : '',
-             day.isSelected ? 'bg-blue-50' : ''
-           ]">
-        <!-- 日付表示 -->
-        <div :class="[
-            'text-sm font-medium rounded-full w-7 h-7 flex items-center justify-center',
-            day.isToday ? 'bg-blue-600 text-white' : ''
-          ]">
-          {{ new Date(day.date).getDate() }}
-        </div>
+      <!-- Calendar days -->
+      <div class="grid grid-cols-7 border-t border-l border-gray-200">
+        <div v-for="(day, index) in calendarDays" :key="index"
+             @click="selectDate(day.date)"
+             :class="[
+               'min-h-[100px] p-1 border-r border-b border-gray-200',
+               day.isCurrentMonth ? 'bg-white' : 'bg-gray-50',
+               day.isToday ? 'bg-yellow-50' : '',
+               day.isSelected ? 'bg-blue-50' : ''
+             ]">
 
-        <!-- タスク表示 -->
-        <div class="mt-1 space-y-1 overflow-y-auto max-h-[80px]">
-          <div v-for="todo in day.todos" :key="todo.id"
-               :class="[
-                 'text-xs p-1 rounded truncate cursor-pointer',
-                 todo.status === 'completed' ? 'line-through text-gray-400 bg-gray-100' : 'text-gray-700 bg-blue-50'
-               ]"
-               :title="todo.title"
-               @click.stop="editTask(todo)">
-            <span v-if="todo.due_time">{{ formatTime(todo.due_time) }} </span>
-            {{ todo.title }}
+          <!-- Day number -->
+          <div :class="[
+              'text-center py-1',
+              !day.isCurrentMonth ? 'text-gray-400' : '',
+              day.isToday ? 'font-bold bg-yellow-100 rounded-full w-6 h-6 mx-auto' : '',
+              day.date.split('-')[2] === '01' ? 'font-bold' : '' // Bold 1st of month
+            ]">
+            {{ parseInt(day.date.split('-')[2]) }} <!-- Display just the day number -->
+          </div>
+
+          <!-- Tasks for this day -->
+          <div class="mt-1 text-xs space-y-1 max-h-28 overflow-y-auto">
+            <div v-for="todo in day.todos" :key="todo.id"
+                 :class="[
+                   'flex items-center p-1 rounded hover:bg-gray-100',
+                   todo.status === 'completed' ? 'text-gray-400 line-through' : ''
+                 ]"
+                 :style="{ borderLeft: '2px solid ' + (todo.category ? todo.category.color : '#ddd') }"
+                 @click.stop="editTask(todo)">
+              <span class="truncate text-xs">
+                {{ todo.title }}
+                <span v-if="todo.due_time" class="text-gray-500">
+                  {{ formatTime(todo.due_time) }}
+                </span>
+              </span>
+            </div>
+
+            <!-- Show count if too many -->
+            <div v-if="day.todos.length > 3" class="text-xs text-blue-500 text-center">
+              + {{ day.todos.length - 3 }} more
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-</template>
+  </template>
 
-<script>
-import { computed, ref, watch } from 'vue';
+  <script>
+  import { computed, ref, watch } from 'vue';
 
-export default {
-  props: {
-    currentDate: {
-      type: String,
-      required: true
+  export default {
+    props: {
+      currentDate: {
+        type: String,
+        required: true
+      },
+      todos: {
+        type: Array,
+        default: () => []
+      }
     },
-    todos: {
-      type: Array,
-      default: () => []
-    }
-  },
 
-  emits: ['date-selected', 'edit-task'],
+    emits: ['date-selected', 'edit-task'],
 
-  setup(props, { emit }) {
-    // Add global function for legacy HTML onclick handlers
-    window.editTodo = function(todoId) {
-      const todo = props.todos.find(t => t.id === todoId);
-      if (todo) {
+    setup(props, { emit }) {
+      // Selected date
+      const selectedDate = ref(props.currentDate);
+
+      // CRITICAL: Fixed date formatting that properly handles timezones
+      function formatDateToLocalYMD(dateString) {
+        if (!dateString) return '';
+
+        // If already in YYYY-MM-DD format, just return it
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+        try {
+          const date = new Date(dateString);
+          return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        } catch (e) {
+          console.error('Error formatting date:', e);
+          return '';
+        }
+      }
+
+      // Generate calendar days
+      const calendarDays = computed(() => {
+        console.log('Generating calendar days for date:', props.currentDate);
+        const days = [];
+
+        // Create a local date object from the current date
+        const date = new Date(props.currentDate);
+        const year = date.getFullYear();
+        const month = date.getMonth();
+
+        // Log to help debug
+        console.log('Calendar year/month:', year, month + 1);
+
+        // First day of month in local time
+        const firstDayOfMonth = new Date(year, month, 1);
+
+        // Last day of month in local time
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+
+        // First day of week containing first day of month
+        const startDay = new Date(firstDayOfMonth);
+        startDay.setDate(firstDayOfMonth.getDate() - firstDayOfMonth.getDay());
+
+        // Current date for today highlighting
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Generate 6 weeks of days
+        for (let week = 0; week < 6; week++) {
+          for (let weekday = 0; weekday < 7; weekday++) {
+            const currentDay = new Date(startDay);
+            currentDay.setDate(startDay.getDate() + (week * 7) + weekday);
+
+            // Format date as YYYY-MM-DD
+            const dateString = formatDateToLocalYMD(currentDay);
+
+            // Get todos for this day
+            const todosForDay = getTodosForDate(dateString);
+
+            days.push({
+              date: dateString,
+              isCurrentMonth: currentDay.getMonth() === month,
+              isToday: currentDay.getTime() === today.getTime(),
+              isSelected: dateString === selectedDate.value,
+              todos: todosForDay
+            });
+          }
+        }
+
+        return days;
+      });
+
+      // Watch for prop changes
+      watch(() => props.currentDate, (newDate) => {
+        selectedDate.value = newDate;
+      });
+
+      // Select a date
+      function selectDate(date) {
+        selectedDate.value = date;
+        emit('date-selected', date);
+      }
+
+      // Get todos for a specific date
+      function getTodosForDate(date) {
+        console.log('Looking for todos on date:', date);
+
+        return props.todos.filter(todo => {
+          // Format todo date to local YYYY-MM-DD
+          const todoDate = formatDateToLocalYMD(todo.due_date);
+
+          // Debug log
+          console.log(`Todo "${todo.title}" date: DB=${todo.due_date}, local=${todoDate}, matches=${todoDate === date}`);
+
+          return todoDate === date;
+        });
+      }
+
+      // Format time for display
+      function formatTime(timeString) {
+        if (!timeString) return '';
+
+        try {
+          // Handle different time formats
+          if (typeof timeString === 'string') {
+            if (timeString.includes('T')) {
+              // If it's a full ISO datetime
+              const date = new Date(timeString);
+              return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+              // If it's just HH:MM:SS
+              const parts = timeString.split(':');
+              return `${parts[0]}:${parts[1]}`;
+            }
+          } else if (timeString instanceof Date) {
+            return timeString.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          }
+          return timeString;
+        } catch (e) {
+          console.error('Error formatting time:', e);
+          return '';
+        }
+      }
+
+      // Edit task
+      function editTask(todo) {
         emit('edit-task', todo);
       }
-    };
-    // 選択された日付
-    const selectedDate = ref(props.currentDate);
 
-    // 曜日配列（日本語）
-    const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-
-    // カレンダーデータ生成
-    const calendarDays = computed(() => {
-      const days = [];
-      const date = new Date(props.currentDate);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-
-      // 月の最初の日を取得
-      const firstDayOfMonth = new Date(year, month, 1);
-      // 月の最後の日を取得
-      const lastDayOfMonth = new Date(year, month + 1, 0);
-
-      // 前月の表示日数を計算（日曜始まり）
-      const daysFromPrevMonth = firstDayOfMonth.getDay();
-
-      // 前月の日を追加
-      for (let i = daysFromPrevMonth - 1; i >= 0; i--) {
-        const prevDate = new Date(year, month, -i);
-        days.push({
-          date: formatDate(prevDate),
-          isCurrentMonth: false,
-          isToday: isToday(prevDate),
-          isSelected: isSameDate(prevDate, selectedDate.value),
-          todos: getTodosForDate(formatDate(prevDate))
-        });
-      }
-
-      // 当月の日を追加
-      for (let i = 1; i <= lastDayOfMonth.getDate(); i++) {
-        const currentDate = new Date(year, month, i);
-        days.push({
-          date: formatDate(currentDate),
-          isCurrentMonth: true,
-          isToday: isToday(currentDate),
-          isSelected: isSameDate(currentDate, selectedDate.value),
-          todos: getTodosForDate(formatDate(currentDate))
-        });
-      }
-
-      // 翌月の日を追加（6週間分になるように）
-      const totalDays = 42; // 6週間分
-      const remainingDays = totalDays - days.length;
-
-      for (let i = 1; i <= remainingDays; i++) {
-        const nextDate = new Date(year, month + 1, i);
-        days.push({
-          date: formatDate(nextDate),
-          isCurrentMonth: false,
-          isToday: isToday(nextDate),
-          isSelected: isSameDate(nextDate, selectedDate.value),
-          todos: getTodosForDate(formatDate(nextDate))
-        });
-      }
-
-      return days;
-    });
-
-    // 選択日付が変更されたら更新
-    watch(() => props.currentDate, (newDate) => {
-      selectedDate.value = newDate;
-    });
-
-    // 日付を選択
-    function selectDate(date) {
-      selectedDate.value = date;
-      emit('date-selected', date);
+      return {
+        calendarDays,
+        selectDate,
+        formatTime,
+        editTask
+      };
     }
-
-    // 特定の日付のタスクを取得
-    function getTodosForDate(date) {
-      return props.todos.filter(todo => todo.due_date === date);
-    }
-
-    // 日付のフォーマット関数
-    function formatDate(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-
-    // 今日かどうかチェック
-    function isToday(date) {
-      const today = new Date();
-      return date.getDate() === today.getDate() &&
-             date.getMonth() === today.getMonth() &&
-             date.getFullYear() === today.getFullYear();
-    }
-
-    // 同じ日付かチェック
-    function isSameDate(date, dateString) {
-      if (!dateString) return false;
-      const compareDate = new Date(dateString);
-      return date.getDate() === compareDate.getDate() &&
-             date.getMonth() === compareDate.getMonth() &&
-             date.getFullYear() === compareDate.getFullYear();
-    }
-
-    // 時間表示のフォーマット
-    function formatTime(timeString) {
-      if (!timeString) return '';
-
-      const parts = timeString.split(':');
-      if (parts.length >= 2) {
-        return `${parts[0]}:${parts[1]}`;
-      }
-      return timeString;
-    }
-
-    // Add editTask method
-    function editTask(todo) {
-      emit('edit-task', todo);
-    }
-
-    return {
-      weekDays,
-      calendarDays,
-      selectDate,
-      formatTime,
-      editTask
-    };
-  }
-};
-</script>
+  };
+  </script>

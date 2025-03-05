@@ -13,13 +13,9 @@ class TodoSeeder extends Seeder
     public function run(): void
     {
         // Create users
-        $user1 = User::factory()->create([
-            'name' => 'テストユーザー',
-            'email' => 'test@example.com',
-            'password' => bcrypt('password'),
-        ]);
 
-        $user2 = User::factory()->create([
+
+        $user1 = User::factory()->create([
             'name' => 'will',
             'email' => 'will@test.com',
             'password' => bcrypt('willwill'),
@@ -36,14 +32,14 @@ class TodoSeeder extends Seeder
         $todos = [
             // INBOX tasks
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '企画書の作成',
                 'description' => '新規プロジェクトの企画書を作成する',
                 'location' => 'INBOX',
                 'status' => 'pending',
             ],
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => 'チームミーティングの議事録まとめ',
                 'location' => 'INBOX',
                 'status' => 'completed',
@@ -51,7 +47,7 @@ class TodoSeeder extends Seeder
 
             // TODAY tasks
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '朝のミーティング',
                 'description' => '全体ミーティング',
                 'location' => 'TODAY',
@@ -60,7 +56,7 @@ class TodoSeeder extends Seeder
                 'status' => 'pending',
             ],
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => 'クライアントとの打ち合わせ',
                 'location' => 'TODAY',
                 'due_date' => Carbon::today(),
@@ -68,7 +64,7 @@ class TodoSeeder extends Seeder
                 'status' => 'pending',
             ],
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => 'メール確認',
                 'location' => 'TODAY',
                 'due_date' => Carbon::today(),
@@ -78,14 +74,14 @@ class TodoSeeder extends Seeder
 
             // TEMPLATE tasks
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '朝の運動',
                 'description' => '30分のジョギング',
                 'location' => 'TEMPLATE',
                 'due_time' => '07:00',
             ],
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '週次レポート作成',
                 'description' => '先週の進捗まとめ',
                 'location' => 'TEMPLATE',
@@ -94,13 +90,13 @@ class TodoSeeder extends Seeder
 
             // Trashed tasks
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '古い会議の議事録作成',
                 'location' => 'INBOX',
                 'status' => 'trashed',
             ],
             [
-                'user_id' => $user2->id,
+                'user_id' => $user1->id,
                 'title' => '先週のデイリースクラム',
                 'location' => 'TODAY',
                 'due_date' => Carbon::today()->subDays(7),

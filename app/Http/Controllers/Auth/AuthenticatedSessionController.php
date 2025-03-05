@@ -1,4 +1,6 @@
 <?php
+// Fix 1: Update AuthenticatedSessionController.php
+// app/Http/Controllers/Auth/AuthenticatedSessionController.php
 
 namespace App\Http\Controllers\Auth;
 
@@ -7,6 +9,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
@@ -24,11 +27,25 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(LoginRequest $request): RedirectResponse
     {
-        $request->authenticate();
+        // Log the login attempt for debugging
+        Log::info('Login attempt for email: ' . $request->email);
 
-        $request->session()->regenerate();
+        try {
+            // Attempt authentication
+            $request->authenticate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+            // Regenerate the session
+            $request->session()->regenerate();
+
+            // Log successful login
+            Log::info('User authenticated successfully: ' . Auth::id());
+
+            return redirect()->intended(route('dashboard', absolute: false));
+        } catch (\Exception $e) {
+            // Log authentication failure
+            Log::error('Authentication error: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     /**
@@ -39,7 +56,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

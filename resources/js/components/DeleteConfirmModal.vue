@@ -1,92 +1,88 @@
 <template>
-  <div class="fixed inset-0 overflow-y-auto z-20" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <!-- Background overlay -->
-      <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" @click="$emit('cancel')"></div>
+    <div class="fixed inset-0 flex items-center justify-center z-50">
+      <div class="absolute inset-0 bg-black bg-opacity-30" @click="cancel"></div>
+      <div class="bg-white rounded-lg shadow-md w-full max-w-md relative z-10 p-6">
+        <h3 class="text-lg font-medium mb-4">タスクの削除</h3>
+        <div>
+          <div class="flex items-center mb-4 text-red-600">
+            <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p class="text-gray-700 font-medium">「{{ todoTitle || 'このタスク' }}」を削除します。この操作は元に戻せません。</p>
+          </div>
 
-      <!-- Modal panel -->
-      <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-          <div class="sm:flex sm:items-start">
-            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-              <svg class="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-              <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">
-                タスクを削除
-              </h3>
-              <div class="mt-2">
-                <p class="text-sm text-gray-500">
-                  「{{ todoTitle }}」を削除します。この操作は元に戻せません。
-                </p>
-
-                <div v-if="isRecurring" class="mt-3 p-3 bg-yellow-50 border border-yellow-100 rounded-md">
-                  <p class="text-sm text-yellow-700">
-                    このタスクは繰り返し設定されています。すべての繰り返しタスクを削除しますか？
-                  </p>
-                  <div class="flex items-center mt-2">
-                    <input
-                      id="delete-all-recurring"
-                      type="checkbox"
-                      v-model="deleteAllRecurring"
-                      class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    >
-                    <label for="delete-all-recurring" class="ml-2 block text-sm text-gray-700">
-                      すべての繰り返しタスクを削除する
-                    </label>
-                  </div>
-                </div>
-              </div>
+          <div v-if="isRecurring" class="mt-3 p-3 bg-yellow-50 border border-yellow-100 rounded-md">
+            <p class="text-sm text-yellow-700">
+              このタスクは繰り返し設定されています。すべての繰り返しタスクを削除しますか？
+            </p>
+            <div class="flex items-center mt-2">
+              <input
+                id="delete-all-recurring"
+                type="checkbox"
+                v-model="deleteAllRecurring"
+                class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              >
+              <label for="delete-all-recurring" class="ml-2 block text-sm text-gray-700">
+                すべての繰り返しタスクを削除する
+              </label>
             </div>
           </div>
         </div>
-
-        <!-- Modal footer -->
-        <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-          <button type="button" @click="confirm"
-                  class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm">
-            削除
-          </button>
-          <button type="button" @click="$emit('cancel')"
-                  class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+        <div class="flex justify-end space-x-3 mt-6">
+          <button type="button" @click="cancel"
+                  class="px-4 py-2 bg-gray-100 text-gray-800 rounded-md hover:bg-gray-200">
             キャンセル
+          </button>
+          <button type="button" @click="confirm"
+                  class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+            削除
           </button>
         </div>
       </div>
     </div>
-  </div>
-</template>
+  </template>
 
-<script>
-import { ref } from 'vue';
+  <script>
+  import { ref } from 'vue';
 
-export default {
-  props: {
-    todoTitle: {
-      type: String,
-      default: 'このタスク'
+  export default {
+    props: {
+      todoTitle: {
+        type: String,
+        default: 'このタスク'
+      },
+      isRecurring: {
+        type: Boolean,
+        default: false
+      }
     },
-    isRecurring: {
-      type: Boolean,
-      default: false
+
+    emits: ['confirm', 'cancel'],
+
+    setup(props, { emit }) {
+      console.log('DeleteConfirmModal setup with props:', props);
+      const deleteAllRecurring = ref(false);
+
+/*************  ✨ Codeium Command ⭐  *************/
+      /**
+       * Emit a confirmation event with the deleteAllRecurring flag
+/******  81c55e35-f5c3-45c2-a40f-92db8231375b  *******/
+      function confirm() {
+        console.log('Deletion confirmed, deleteAllRecurring:', deleteAllRecurring.value);
+        emit('confirm', true, deleteAllRecurring.value);
+      }
+
+      function cancel() {
+        console.log('Deletion canceled');
+        emit('cancel');
+        emit('confirm', false); // Also emit confirm with false to clearly indicate cancellation
+      }
+
+      return {
+        deleteAllRecurring,
+        confirm,
+        cancel
+      };
     }
-  },
-
-  emits: ['confirm', 'cancel'],
-
-  setup(props, { emit }) {
-    const deleteAllRecurring = ref(false);
-
-    function confirm() {
-      emit('confirm', deleteAllRecurring.value);
-    }
-
-    return {
-      deleteAllRecurring,
-      confirm
-    };
-  }
-};
-</script>
+  };
+  </script>

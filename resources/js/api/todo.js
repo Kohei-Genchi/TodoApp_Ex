@@ -1,50 +1,202 @@
+// src/api/todo.js
 import axios from 'axios';
 
 export default {
     // ビューと日付に基づいてタスクを取得
     getTasks(view, date) {
+        console.log('API getTasks called with:', { view, date });
         return axios.get(`/api/todos`, { params: { view, date } });
+    },
+
+    // タスクをIDで取得
+    getTaskById(id) {
+        console.log('API getTaskById called with ID:', id);
+        if (!id && id !== 0) {
+            console.error('Error: getTaskById called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+        return axios.get(`/api/todos/${id}`);
     },
 
     // 新しいタスクを作成
     createTask(taskData) {
-        return axios.post('/api/todos', taskData);
+        console.log('API createTask called with data:', taskData);
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to create task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        console.log('Creating task with headers:', headers);
+
+        return axios.post('/api/todos', taskData, { headers });
     },
 
     // 既存のタスクを更新
     updateTask(id, taskData) {
-        return axios.put(`/api/todos/${id}`, taskData);
+        console.log('API updateTask called with ID:', id, 'and data:', taskData);
+
+        if (!id && id !== 0) {
+            console.error('Error: updateTask called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to update task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        console.log('Updating task with headers:', headers);
+
+        // Make sure the URL is correctly formed
+        const url = `/api/todos/${id}`;
+        console.log('PUT request to URL:', url);
+
+        return axios.put(url, taskData, { headers });
     },
 
     // タスクの完了状態をトグル
     toggleTask(id) {
-        return axios.patch(`/api/todos/${id}/toggle`);
+        console.log('API toggleTask called with ID:', id);
+
+        if (!id && id !== 0) {
+            console.error('Error: toggleTask called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to toggle task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        return axios.patch(`/api/todos/${id}/toggle`, {}, { headers });
     },
 
     // タスクをゴミ箱に移動
     trashTask(id) {
-        return axios.patch(`/api/todos/${id}/trash`);
+        console.log('API trashTask called with ID:', id);
+
+        if (!id && id !== 0) {
+            console.error('Error: trashTask called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to trash task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        return axios.patch(`/api/todos/${id}/trash`, {}, { headers });
     },
 
     // タスクをゴミ箱から復元
     restoreTask(id) {
-        return axios.patch(`/api/todos/${id}/restore`);
+        console.log('API restoreTask called with ID:', id);
+
+        if (!id && id !== 0) {
+            console.error('Error: restoreTask called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to restore task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        return axios.patch(`/api/todos/${id}/restore`, {}, { headers });
     },
 
     // タスクを完全に削除
     deleteTask(id, deleteRecurring = false) {
+        console.log('API deleteTask called with ID:', id, 'deleteRecurring:', deleteRecurring);
+
+        if (!id && id !== 0) {
+            console.error('Error: deleteTask called without an ID');
+            return Promise.reject(new Error('No task ID provided'));
+        }
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to delete task anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
         return axios.delete(`/api/todos/${id}`, {
+            headers,
             params: { delete_recurring: deleteRecurring ? 1 : 0 }
         });
     },
 
     // ゴミ箱を空にする
     emptyTrash() {
-        return axios.delete('/api/todos/trash/empty');
+        console.log('API emptyTrash called');
+
+        // Make sure we have the CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+        if (!csrfToken) {
+            console.warn('CSRF token not found, attempting to empty trash anyway');
+        }
+
+        // Add CSRF token to headers
+        const headers = {
+            'X-CSRF-TOKEN': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        };
+
+        return axios.delete('/api/todos/trash/empty', { headers });
     },
 
     // ゴミ箱内のタスクを取得
     getTrashedTasks() {
-        return axios.get('/api/todos/trash');
+        console.log('API getTrashedTasks called');
+        return axios.get('/api/todos/trashed');
     }
 };

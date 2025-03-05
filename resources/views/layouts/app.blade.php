@@ -13,13 +13,22 @@
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        <script>
+            window.Laravel = {!! json_encode([
+                'user' => Auth::check() ? [
+                    'id' => Auth::id(),
+                    'name' => Auth::user()->name,
+                    'email' => Auth::user()->email,
+                ] : null,
+            ]) !!};
+        </script>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
             @include('layouts.navigation')
 
             <!-- Page Content -->
-            <main>
+            <main style="margin-left: 240px;">
                 {{ $slot }}
             </main>
         </div>

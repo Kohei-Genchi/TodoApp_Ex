@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
 class CategoryApiController extends Controller
@@ -18,31 +19,25 @@ class CategoryApiController extends Controller
     public function index(): JsonResponse
     {
         try {
+            // For unauthenticated access, return empty array instead of 401
+            if (!Auth::check()) {
+                Log::info('Unauthenticated access to categories API - returning empty array');
+                return response()->json([]);
+            }
+
             $user = Auth::user();
+            Log::info('Fetching categories for user ID: ' . $user->id);
 
-            if (!$user) {
-                // Create a default user for debugging
-                $user = User::firstOrCreate(
-                    ['email' => 'guest@example.com'],
-                    [
-                        'name' => 'Guest User',
-                        'password' => bcrypt('password'),
-                    ]
-                );
-            }
+            $categories = $user->categories()->orderBy('name')->get();
 
-            // Ensure user is not null before calling categories()
-            if ($user) {
-                $categories = $user->categories()->orderBy('name')->get();
-                return response()->json($categories);
-            } else {
-                // This should not happen, but just in case
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User not found or could not be created'
-                ], 500);
-            }
+            // Log the fetched categories
+            Log::info('Fetched ' . count($categories) . ' categories for user');
+            Log::debug('Categories data: ' . json_encode($categories));
+
+            return response()->json($categories);
+
         } catch (\Exception $e) {
+            Log::error('Error in CategoryApiController->index: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching categories',
@@ -56,6 +51,12 @@ class CategoryApiController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
+        // For unauthenticated access, return empty array instead of 401
+        if (!Auth::check()) {
+            Log::info('Unauthenticated access to category store API - returning empty array');
+            return response()->json([]);
+        }
+
         // Validate the request
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -71,19 +72,7 @@ class CategoryApiController extends Controller
         }
 
         try {
-            // Get the authenticated user or create a default one
             $user = Auth::user();
-
-            if (!$user) {
-                // Create a default user for debugging
-                $user = User::firstOrCreate(
-                    ['email' => 'guest@example.com'],
-                    [
-                        'name' => 'Guest User',
-                        'password' => bcrypt('password'),
-                    ]
-                );
-            }
 
             // Create the category
             $category = Category::create([
@@ -91,6 +80,8 @@ class CategoryApiController extends Controller
                 'color' => $request->color,
                 'user_id' => $user->id
             ]);
+
+            Log::info('Created new category ID: ' . $category->id . ' for user ID: ' . $user->id);
 
             return response()->json([
                 'success' => true,
@@ -100,6 +91,7 @@ class CategoryApiController extends Controller
                 'color' => $category->color
             ], 201);
         } catch (\Exception $e) {
+            Log::error('Error in CategoryApiController->store: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error creating category',
@@ -113,6 +105,12 @@ class CategoryApiController extends Controller
      */
     public function update(Request $request, Category $category): JsonResponse
     {
+        // For unauthenticated access, return empty array instead of 401
+        if (!Auth::check()) {
+            Log::info('Unauthenticated access to category update API - returning empty array');
+            return response()->json([]);
+        }
+
         // Check if the authenticated user owns this category
         if ($category->user_id !== Auth::id()) {
             return response()->json([
@@ -148,6 +146,7 @@ class CategoryApiController extends Controller
                 'category' => $category
             ]);
         } catch (\Exception $e) {
+            Log::error('Error in CategoryApiController->update: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating category',
@@ -161,6 +160,12 @@ class CategoryApiController extends Controller
      */
     public function destroy(Category $category): JsonResponse
     {
+        // For unauthenticated access, return empty array instead of 401
+        if (!Auth::check()) {
+            Log::info('Unauthenticated access to category destroy API - returning empty array');
+            return response()->json([]);
+        }
+
         // Check if the authenticated user owns this category
         if ($category->user_id !== Auth::id()) {
             return response()->json([
@@ -178,6 +183,7 @@ class CategoryApiController extends Controller
                 'message' => 'Category deleted successfully'
             ]);
         } catch (\Exception $e) {
+            Log::error('Error in CategoryApiController->destroy: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Error deleting category',

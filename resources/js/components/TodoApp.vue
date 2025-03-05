@@ -1,129 +1,121 @@
 <template>
-  <div class="bg-gray-100 min-h-screen">
-    <!-- ヘッダー -->
-    <header class="bg-white shadow">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="flex justify-between items-center">
-          <h1 class="text-xl font-semibold text-gray-900">Todo App</h1>
+    <div class="bg-gray-100 min-h-screen main-content">
+      <!-- ヘッダー -->
+      <header class="bg-white shadow">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div class="flex justify-between items-center">
+            <h1 class="text-xl font-semibold text-gray-900">Todo App</h1>
 
-          <!-- ビューセレクター -->
-          <div class="flex space-x-2">
-            <button @click="setView('today')"
-                   :class="[
-                     'px-3 py-1 rounded-md text-sm font-medium',
-                     currentView === 'today'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                   ]">
-              今日
-            </button>
-            <button @click="showCalendarView()"
-                   :class="[
-                     'px-3 py-1 rounded-md text-sm font-medium',
-                     currentView === 'calendar'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                   ]">
-              カレンダー
-            </button>
-            <button @click="showTrashView()"
-                   :class="[
-                     'px-3 py-1 rounded-md text-sm font-medium',
-                     currentView === 'trash'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                   ]">
-              ゴミ箱
-            </button>
+            <!-- ビューセレクター (アイコンなし) -->
+            <div class="flex space-x-2">
+              <button @click="setView('today')"
+                     :class="[
+                       'px-3 py-1 rounded-md text-sm font-medium',
+                       currentView === 'today'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                     ]">
+                今日
+              </button>
+              <button @click="showCalendarView()"
+                     :class="[
+                       'px-3 py-1 rounded-md text-sm font-medium',
+                       currentView === 'calendar'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                     ]">
+                カレンダー
+              </button>
+              <button @click="showTrashView()"
+                     :class="[
+                       'px-3 py-1 rounded-md text-sm font-medium',
+                       currentView === 'trash'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                     ]">
+                ゴミ箱
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <!-- 日付ナビゲーション（カレンダービュー以外で表示） -->
-      <div v-if="currentView !== 'calendar' && currentView !== 'trash'" class="mb-6 flex justify-between items-center">
-        <button @click="previousDay" class="text-gray-600 hover:text-gray-900">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+      <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- 日付ナビゲーション (テキストベース) -->
+        <div v-if="currentView !== 'calendar' && currentView !== 'trash'" class="mb-6 flex justify-between items-center">
+          <button @click="previousDay" class="text-gray-600 hover:text-gray-900 px-3 py-1">
+            前日
+          </button>
 
-        <h2 class="text-lg font-medium text-gray-900">
-          {{ formattedDate }}
-        </h2>
+          <h2 class="text-lg font-medium text-gray-900">
+            {{ formattedDate }}
+          </h2>
 
-        <button @click="nextDay" class="text-gray-600 hover:text-gray-900">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+          <button @click="nextDay" class="text-gray-600 hover:text-gray-900 px-3 py-1">
+            翌日
+          </button>
+        </div>
 
-      <!-- カレンダー月ナビゲーション（カレンダービューで表示） -->
-      <div v-if="currentView === 'calendar'" class="mb-6 flex justify-between items-center">
-        <button @click="previousMonth" class="text-gray-600 hover:text-gray-900">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
+        <!-- カレンダー月ナビゲーション (テキストベース) -->
+        <div v-if="currentView === 'calendar'" class="mb-6 flex justify-between items-center">
+          <button @click="previousMonth" class="text-gray-600 hover:text-gray-900 px-3 py-1">
+            前月
+          </button>
 
-        <h2 class="text-lg font-medium text-gray-900">
-          {{ formattedMonth }}
-        </h2>
+          <h2 class="text-lg font-medium text-gray-900">
+            {{ formattedMonth }}
+          </h2>
 
-        <button @click="nextMonth" class="text-gray-600 hover:text-gray-900">
-          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-      </div>
+          <button @click="nextMonth" class="text-gray-600 hover:text-gray-900 px-3 py-1">
+            翌月
+          </button>
+        </div>
 
-      <!-- タスク追加ボタン（ゴミ箱ビュー以外で表示） -->
-      <div v-if="currentView !== 'trash'" class="mb-6">
-        <button @click="openAddTaskModal"
-               class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-          + 新しいタスク
-        </button>
-      </div>
+        <!-- タスク追加ボタン -->
+        <div v-if="currentView !== 'trash'" class="mb-6">
+          <button @click="openAddTaskModal"
+                 class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            + 新しいタスク
+          </button>
+        </div>
 
-      <!-- ゴミ箱を空にするボタン（ゴミ箱ビューで表示） -->
-      <div v-if="currentView === 'trash' && trashedTodos.length > 0" class="mb-6">
-        <button @click="confirmEmptyTrash"
-               class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-          ゴミ箱を空にする
-        </button>
-      </div>
+        <!-- ゴミ箱を空にするボタン -->
+        <div v-if="currentView === 'trash' && trashedTodos.length > 0" class="mb-6">
+          <button @click="confirmEmptyTrash"
+                 class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+            ゴミ箱を空にする
+          </button>
+        </div>
 
-      <!-- カレンダー表示 -->
-      <todo-calendar
-        v-if="currentView === 'calendar'"
-        :current-date="currentDate"
-        :todos="todos"
-        @date-selected="selectDate"
-        @edit-task="openEditTaskModal"
-      />
+        <!-- カレンダー表示 -->
+        <todo-calendar
+          v-if="currentView === 'calendar'"
+          :current-date="currentDate"
+          :todos="todos"
+          @date-selected="selectDate"
+          @edit-task="openEditTaskModal"
+        />
 
-      <!-- タスク一覧（通常ビュー） -->
-      <todo-list
-        v-if="currentView !== 'calendar' && currentView !== 'trash'"
-        :todos="filteredTodos"
-        :categories="categories"
-        @toggle-task="toggleTaskStatus"
-        @edit-task="openEditTaskModal"
-        @trash-task="trashTask"
-      />
+        <!-- タスク一覧（通常ビュー） -->
+        <todo-list
+          v-if="currentView !== 'calendar' && currentView !== 'trash'"
+          :todos="filteredTodos"
+          :categories="categories"
+          @toggle-task="toggleTaskStatus"
+          @edit-task="openEditTaskModal"
+          @trash-task="trashTask"
+        />
 
-      <!-- タスク一覧（ゴミ箱ビュー） -->
-      <todo-list
-        v-if="currentView === 'trash'"
-        :todos="trashedTodos"
-        :categories="categories"
-        :is-trash-view="true"
-        @restore-task="restoreTask"
-        @delete-task="confirmDeleteTask"
-      />
-    </main>
+        <!-- タスク一覧（ゴミ箱ビュー） -->
+        <todo-list
+          v-if="currentView === 'trash'"
+          :todos="trashedTodos"
+          :categories="categories"
+          :is-trash-view="true"
+          @restore-task="restoreTask"
+          @delete-task="confirmDeleteTask"
+        />
+      </main>
 
     <!-- タスク追加/編集モーダル -->
     <task-modal
@@ -159,7 +151,7 @@ import { ref, computed, onMounted, defineAsyncComponent } from 'vue';
 import TodoApi from '../api/todo';
 import CategoryApi from '../api/category';
 
-// コンポーネントの非同期インポート
+// Components imports
 const TodoList = defineAsyncComponent(() => import('./TodoList.vue'));
 const TodoCalendar = defineAsyncComponent(() => import('./TodoCalendar.vue'));
 const TaskModal = defineAsyncComponent(() => import('./TaskModal.vue'));
@@ -176,14 +168,14 @@ export default {
   },
 
   setup() {
-    // 状態管理
+    // State
     const todos = ref([]);
     const trashedTodos = ref([]);
     const categories = ref([]);
     const currentView = ref('today');
     const currentDate = ref(new Date().toISOString().split('T')[0]);
 
-    // モーダル管理
+    // Modal state
     const showTaskModal = ref(false);
     const taskModalMode = ref('add');
     const selectedTaskId = ref(null);
@@ -191,10 +183,34 @@ export default {
     const showDeleteConfirmModal = ref(false);
     const deleteAllRecurring = ref(false);
 
-    // 通知用ref
+    // Notification ref
     const notification = ref(null);
 
-    // 計算プロパティ
+    // Date formatting helper - CRITICAL for comparing dates correctly
+    function formatDateForComparison(dateString) {
+      if (!dateString) return '';
+
+      // If it's already a YYYY-MM-DD string, return it
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+
+      try {
+        // Create a date object from the string
+        const date = new Date(dateString);
+
+        // Use local timezone functions to get accurate date parts
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        // Return date in YYYY-MM-DD format using local timezone
+        return `${year}-${month}-${day}`;
+      } catch (e) {
+        console.error('Error formatting date:', e, dateString);
+        return '';
+      }
+    }
+
+    // Computed properties
     const formattedDate = computed(() => {
       const date = new Date(currentDate.value);
       const today = new Date();
@@ -215,40 +231,50 @@ export default {
         return '昨日';
       }
 
-      // 日本語表記に変換
+      // Japanese format
       const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
       return date.toLocaleDateString('ja-JP', options);
     });
 
     const formattedMonth = computed(() => {
       const date = new Date(currentDate.value);
-      // 日本語表記に変換
       const options = { year: 'numeric', month: 'long' };
       return date.toLocaleDateString('ja-JP', options);
     });
 
     const filteredTodos = computed(() => {
-      if (currentView.value === 'today') {
-        // 今日のタスク
-        return todos.value.filter(todo =>
-          todo.due_date === currentDate.value && todo.status !== 'trashed'
-        );
-      } else {
-        // 指定日のタスク
-        return todos.value.filter(todo =>
-          todo.due_date === currentDate.value && todo.status !== 'trashed'
-        );
-      }
+      const formattedCurrentDate = formatDateForComparison(currentDate.value);
+      console.log('Filtering todos for date:', formattedCurrentDate);
+
+      const filtered = todos.value.filter(todo => {
+        // Format the todo's due_date in local timezone
+        const formattedTodoDate = formatDateForComparison(todo.due_date);
+        return formattedTodoDate === formattedCurrentDate && todo.status !== 'trashed';
+      });
+
+      console.log('Filtered todos count:', filtered.length);
+      return filtered;
     });
 
-    // メソッド
+    // Methods
     async function loadTasks() {
+      console.log('Loading tasks for view:', currentView.value, 'date:', currentDate.value);
       try {
         const response = await TodoApi.getTasks(currentView.value, currentDate.value);
-        todos.value = response.data;
+        console.log('API response data:', response.data);
+
+        todos.value = response.data.map(todo => {
+          if (todo.due_date) {
+            // Convert date to local timezone format
+            todo.formatted_due_date = formatDateForComparison(todo.due_date);
+          }
+          return todo;
+        });
+
+        console.log('Todos after processing:', todos.value);
       } catch (error) {
         console.error('Error loading tasks:', error);
-        notification.value.show('タスクの読み込みに失敗しました', 'error');
+        notification.value?.show('タスクの読み込みに失敗しました', 'error');
       }
     }
 
@@ -258,17 +284,28 @@ export default {
         trashedTodos.value = response.data;
       } catch (error) {
         console.error('Error loading trashed tasks:', error);
-        notification.value.show('ゴミ箱の読み込みに失敗しました', 'error');
+        notification.value?.show('ゴミ箱の読み込みに失敗しました', 'error');
       }
     }
 
     async function loadCategories() {
+      console.log('Loading categories...');
       try {
         const response = await CategoryApi.getCategories();
-        categories.value = response.data;
+        console.log('Categories API response:', response);
+        console.log('Categories loaded:', response.data);
+        categories.value = response.data || [];
+
+        // Make sure categories are properly formatted for selection
+        categories.value.forEach(cat => {
+          // Ensure id is a number for consistency
+          cat.id = Number(cat.id);
+        });
+
+        console.log('Categories processed:', categories.value);
       } catch (error) {
         console.error('Error loading categories:', error);
-        notification.value.show('カテゴリーの読み込みに失敗しました', 'error');
+        notification.value?.show('カテゴリーの読み込みに失敗しました', 'error');
       }
     }
 
@@ -324,46 +361,191 @@ export default {
       loadTasks();
     }
 
-    // タスクモーダル関連
+    // Task modal functions
     function openAddTaskModal() {
+      console.log('Opening add task modal');
+
       taskModalMode.value = 'add';
       selectedTaskId.value = null;
       selectedTaskData.value = {
         title: '',
+        description: '',
         due_date: currentDate.value,
         due_time: '',
         category_id: '',
         recurrence_type: 'none',
         recurrence_end_date: ''
       };
+
+      console.log('Set add task modal data:', selectedTaskData.value);
       showTaskModal.value = true;
     }
 
-    function openEditTaskModal(task) {
-      taskModalMode.value = 'edit';
-      selectedTaskId.value = task.id;
-      selectedTaskData.value = { ...task };
-      showTaskModal.value = true;
+    async function openEditTaskModal(task) {
+      try {
+        console.log('OpenEditTaskModal called with:', task);
+
+        // Handle direct ID input (as number or string)
+        if ((typeof task === 'number' || typeof task === 'string') && !isNaN(Number(task))) {
+          const taskId = Number(task);
+          console.log('Task is a direct ID:', taskId);
+          await fetchAndEditTask(taskId);
+          return;
+        }
+
+        // Handle case where task might be empty array or undefined
+        if (!task || (Array.isArray(task) && task.length === 0)) {
+          console.error('Task is empty or invalid:', task);
+          notification.value?.show('編集するタスクが見つかりません', 'error');
+          return;
+        }
+
+        // Handle case where task is an object with an ID property
+        if (typeof task === 'object' && task !== null) {
+          // If we only have an ID, fetch the full task data
+          if (task.id !== undefined && task.id !== null && (!task.title || typeof task.title !== 'string')) {
+            await fetchAndEditTask(task.id);
+            return;
+          }
+
+          // Force reload categories before opening modal
+          await loadCategories();
+          console.log('Categories refreshed before opening modal:', categories.value);
+
+          taskModalMode.value = 'edit';
+
+          // Make sure task ID is properly set
+          if (task.id === undefined || task.id === null) {
+            console.error('Task object has no ID:', task);
+            notification.value?.show('タスクIDが見つかりません', 'error');
+            return;
+          }
+
+          selectedTaskId.value = Number(task.id);
+          console.log('Selected task ID set to:', selectedTaskId.value);
+
+          // Make a deep copy of the task to avoid reference issues
+          selectedTaskData.value = JSON.parse(JSON.stringify(task));
+
+          // Log the data being passed to the modal
+          console.log('Data being passed to TaskModal:', {
+            mode: taskModalMode.value,
+            todoId: selectedTaskId.value,
+            todoData: selectedTaskData.value,
+            categories: categories.value
+          });
+
+          showTaskModal.value = true;
+        }
+      } catch (error) {
+        console.error('Error in openEditTaskModal:', error);
+        notification.value?.show('タスク編集の準備中にエラーが発生しました', 'error');
+      }
+    }
+
+    // Helper function to fetch task data by ID and open edit modal
+    async function fetchAndEditTask(taskId) {
+      console.log('Fetching task data for ID:', taskId);
+
+      try {
+        // First check if we have this task already loaded
+        const task = todos.value.find(t => t.id === taskId) ||
+                    trashedTodos.value.find(t => t.id === taskId);
+
+        if (task) {
+          console.log('Found task in local data:', task);
+          await loadCategories();
+          taskModalMode.value = 'edit';
+          selectedTaskId.value = Number(taskId);
+          selectedTaskData.value = JSON.parse(JSON.stringify(task));
+          showTaskModal.value = true;
+          return;
+        }
+
+        // Fetch the task data from API
+        console.log('Task not found locally, fetching from API...');
+        const response = await TodoApi.getTaskById(taskId);
+        console.log('Task data fetched from API:', response.data);
+
+        await loadCategories();
+        taskModalMode.value = 'edit';
+        selectedTaskId.value = Number(taskId);
+        selectedTaskData.value = response.data;
+        showTaskModal.value = true;
+      } catch (error) {
+        console.error('Error fetching task data:', error);
+        notification.value?.show('タスクデータの取得に失敗しました', 'error');
+      }
     }
 
     function closeTaskModal() {
+      console.log('Closing task modal');
       showTaskModal.value = false;
+    }
+
+    function formatDateForAPI(dateStr) {
+      // Ensure we send the date in the format the API expects
+      // For API calls, we should ensure the date is sent correctly
+      if (!dateStr) return null;
+
+      try {
+        const date = new Date(dateStr);
+        // Format as YYYY-MM-DD and set time to midday to avoid timezone issues
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+
+        // Return just the date part
+        return `${year}-${month}-${day}`;
+      } catch (e) {
+        console.error('Error formatting date for API:', e);
+        return null;
+      }
     }
 
     async function submitTask(taskData) {
       try {
+        console.log('submitTask called with:', taskData);
+
+        // Clone task data to avoid modifying the original
+        const preparedData = { ...taskData };
+
+        // Format dates correctly for the API
+        if (preparedData.due_date) {
+          preparedData.due_date = formatDateForAPI(preparedData.due_date);
+        }
+
+        if (preparedData.recurrence_end_date) {
+          preparedData.recurrence_end_date = formatDateForAPI(preparedData.recurrence_end_date);
+        }
+
+        console.log('Submitting task with prepared data:', preparedData);
+        console.log('Task mode:', taskModalMode.value, 'Selected task ID:', selectedTaskId.value);
+
         if (taskModalMode.value === 'add') {
-          // 新規タスク追加
-          await TodoApi.createTask(taskData);
+          // New task addition
+          console.log('Creating new task with TodoApi.createTask()');
+          const response = await TodoApi.createTask(preparedData);
+          console.log('Task created response:', response);
           notification.value.show('タスクを追加しました');
         } else {
-          // 既存タスク更新
-          await TodoApi.updateTask(selectedTaskId.value, taskData);
+          // Ensure task ID is available before updating
+          const taskId = selectedTaskId.value || (preparedData.id ? Number(preparedData.id) : null);
+
+          if (!taskId && taskId !== 0) {
+            console.error('No task ID available for update');
+            notification.value.show('タスクの更新に失敗しました: タスクIDが見つかりません', 'error');
+            return;
+          }
+
+          // Update existing task
+          console.log(`Updating task ID ${taskId} with TodoApi.updateTask()`);
+          const response = await TodoApi.updateTask(taskId, preparedData);
+          console.log('Task updated response:', response);
           notification.value.show('タスクを更新しました');
         }
 
         closeTaskModal();
-        // ビューに応じてタスクリストを更新
         if (currentView.value === 'trash') {
           loadTrashedTasks();
         } else {
@@ -375,58 +557,65 @@ export default {
       }
     }
 
-    // タスク操作関連
     async function toggleTaskStatus(task) {
       try {
         await TodoApi.toggleTask(task.id);
 
-        // 状態を即時更新（最適化）
+        // Optimistic update
         const taskIndex = todos.value.findIndex(t => t.id === task.id);
         if (taskIndex !== -1) {
           todos.value[taskIndex].status =
             todos.value[taskIndex].status === 'completed' ? 'pending' : 'completed';
         }
 
-        // 全体を更新
         loadTasks();
       } catch (error) {
         console.error('Error toggling task status:', error);
-        notification.value.show('タスクのステータス変更に失敗しました', 'error');
+        notification.value?.show('タスクのステータス変更に失敗しました', 'error');
       }
     }
 
     async function trashTask(task) {
       try {
         await TodoApi.trashTask(task.id);
-        notification.value.show('タスクをゴミ箱に移動しました');
+        notification.value?.show('タスクをゴミ箱に移動しました');
         loadTasks();
       } catch (error) {
         console.error('Error trashing task:', error);
-        notification.value.show('タスクの削除に失敗しました', 'error');
+        notification.value?.show('タスクの削除に失敗しました', 'error');
       }
     }
 
     async function restoreTask(task) {
       try {
         await TodoApi.restoreTask(task.id);
-        notification.value.show('タスクを復元しました');
+        notification.value?.show('タスクを復元しました');
         loadTrashedTasks();
       } catch (error) {
         console.error('Error restoring task:', error);
-        notification.value.show('タスクの復元に失敗しました', 'error');
+        notification.value?.show('タスクの復元に失敗しました', 'error');
       }
     }
 
-    function handleTaskDelete(id, deleteAllRecurringFlag) {
+    async function handleTaskDelete(id, deleteAllRecurringFlag) {
+      console.log('handleTaskDelete called with:', id, deleteAllRecurringFlag);
+
+      // First close the task modal
+      closeTaskModal();
+
+      // Then show the delete confirmation modal
       selectedTaskId.value = id;
       deleteAllRecurring.value = deleteAllRecurringFlag;
 
-      // 選択したタスクの情報を取得
-      const task = todos.value.find(t => t.id === id);
+      // Find the task for showing in the confirmation
+      const task = todos.value.find(t => t.id === id) ||
+                  trashedTodos.value.find(t => t.id === id);
+
       if (task) {
         selectedTaskData.value = task;
       }
 
+      // Show the confirmation modal - don't delete until user confirms
       showDeleteConfirmModal.value = true;
     }
 
@@ -436,23 +625,32 @@ export default {
       showDeleteConfirmModal.value = true;
     }
 
-    async function confirmDelete() {
+    async function confirmDelete(confirmed = true) {
+      console.log('confirmDelete called with confirmation:', confirmed);
+
+      // Only proceed if user confirmed
+      if (!confirmed) {
+        showDeleteConfirmModal.value = false;
+        return;
+      }
+
       try {
         await TodoApi.deleteTask(selectedTaskId.value, deleteAllRecurring.value);
-        notification.value.show('タスクを削除しました');
+        notification.value?.show('タスクを削除しました');
         showDeleteConfirmModal.value = false;
 
-        // ビューに応じてタスクリストを更新
+        // Aggressively refresh task lists
         if (currentView.value === 'trash') {
-          loadTrashedTasks();
+          await loadTrashedTasks();
         } else {
-          loadTasks();
+          await loadTasks();
         }
 
-        closeTaskModal();
+        // Force a refresh of filtered todos
+        todos.value = [...todos.value]; // Trigger reactivity
       } catch (error) {
         console.error('Error deleting task:', error);
-        notification.value.show('タスクの削除に失敗しました', 'error');
+        notification.value?.show('タスクの削除に失敗しました', 'error');
       }
     }
 
@@ -460,19 +658,43 @@ export default {
       if (confirm('ゴミ箱を空にしますか？この操作は元に戻せません。')) {
         try {
           await TodoApi.emptyTrash();
-          notification.value.show('ゴミ箱を空にしました');
+          notification.value?.show('ゴミ箱を空にしました');
           loadTrashedTasks();
         } catch (error) {
           console.error('Error emptying trash:', error);
-          notification.value.show('ゴミ箱を空にできませんでした', 'error');
+          notification.value?.show('ゴミ箱を空にできませんでした', 'error');
         }
       }
     }
 
-    // 初期化
+    // Initialize
     onMounted(() => {
+      console.log('TodoApp component mounted');
       loadTasks();
       loadCategories();
+
+      // Listen for edit-todo events from legacy code
+      document.getElementById('todo-app')?.addEventListener('edit-todo', async (event) => {
+        console.log('Received edit-todo event:', event.detail);
+
+        try {
+          const { id, data } = event.detail;
+
+          if (id !== undefined && id !== null) {
+            console.log('Edit-todo event contains ID:', id);
+            await fetchAndEditTask(Number(id));
+          } else if (data) {
+            console.log('Edit-todo event contains data object:', data);
+            openEditTaskModal(data);
+          } else {
+            console.error('Invalid edit-todo event payload:', event.detail);
+            notification.value?.show('タスク編集データが無効です', 'error');
+          }
+        } catch (error) {
+          console.error('Error processing edit-todo event:', error);
+          notification.value?.show('タスク編集の処理中にエラーが発生しました', 'error');
+        }
+      });
     });
 
     return {
@@ -500,6 +722,7 @@ export default {
       selectDate,
       openAddTaskModal,
       openEditTaskModal,
+      fetchAndEditTask,
       closeTaskModal,
       submitTask,
       toggleTaskStatus,

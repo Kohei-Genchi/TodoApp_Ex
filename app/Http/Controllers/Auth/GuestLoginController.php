@@ -4,37 +4,37 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class GuestLoginController extends Controller
 {
     /**
-     * ゲストユーザーとしてログイン
+     * Handle guest login request.
+     * This should ONLY happen when the "かんたんログイン" button is clicked.
      */
-    public function login(): RedirectResponse
+    public function login(Request $request)
     {
-        // ゲストユーザーが存在するか確認
-        $guestUser = User::where('email', 'guest@example.com')->first();
 
-        // 存在しない場合は作成
-        if (!$guestUser) {
-            $guestUser = User::create([
-                'name' => 'ゲストユーザー',
+        // Log that this method was called
+        Log::info('Guest login requested through "かんたんログイン" button');
+
+        // This is ONLY for "かんたんログイン" button clicks
+        $user = User::where('email', 'guest@example.com')->first();
+
+        if (!$user) {
+            // Create guest user only when explicitly requested through the button
+            Log::info('Creating guest user because "かんたんログイン" button was clicked');
+            $user = User::create([
+                'name' => 'Guest User',
                 'email' => 'guest@example.com',
-                'password' => Hash::make('password'),
-                'remember_token' => Str::random(10),
+                'password' => bcrypt('guest-password')
             ]);
         }
 
-        // ログイン処理
-        Auth::login($guestUser);
+        Auth::login($user);
 
-        // セッションを再生成してセキュリティを高める
-        request()->session()->regenerate();
-
-        return redirect()->intended(route('dashboard', absolute: false));
+        return redirect()->route('todos.index');
     }
 }

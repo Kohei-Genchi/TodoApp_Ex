@@ -1,4 +1,4 @@
-{{-- resources/views/todos/partials/task-modal.blade.php --}}
+resources/views/todos/partials/task-modal.blade.php
 <div id="task-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
     <div class="absolute inset-0 bg-black bg-opacity-40" onclick="closeTaskModal()"></div>
 
