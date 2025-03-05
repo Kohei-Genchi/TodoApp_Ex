@@ -10,36 +10,59 @@
             @click="$emit('close')"
         ></div>
 
-        <!-- Modal Content -->
+        <!-- Modal Content - スクロール可能にする -->
         <div
-            class="bg-white rounded-lg shadow-lg w-full max-w-xl relative z-10 overflow-hidden"
+            class="bg-white rounded-lg shadow-lg w-full max-w-xl relative z-10 flex flex-col max-h-[90vh]"
         >
-            <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <!-- ヘッダー - 固定 -->
+            <div
+                class="px-4 py-3 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
+            >
                 <h3 id="modal-title" class="text-lg font-medium text-gray-800">
                     {{ mode === "add" ? "新しいタスク" : "タスクを編集" }}
                 </h3>
+                <button
+                    @click="$emit('close')"
+                    class="text-gray-400 hover:text-gray-500"
+                >
+                    <svg
+                        class="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12"
+                        />
+                    </svg>
+                </button>
             </div>
 
-            <div class="p-6">
+            <!-- 本体 - スクロール可能 -->
+            <div class="p-4 overflow-y-auto">
                 <!-- Task Form -->
-                <form @submit.prevent="submitForm" class="space-y-4">
+                <form @submit.prevent="submitForm" class="space-y-2">
                     <!-- Title -->
                     <div>
                         <label
                             for="title"
                             class="block text-sm font-medium text-gray-700"
-                            >タイトル<span class="text-red-500">*</span></label
                         >
+                            タイトル<span class="text-red-500">*</span>
+                        </label>
                         <input
                             type="text"
                             id="title"
                             v-model="form.title"
                             required
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         />
                     </div>
 
-                    <!-- Description -->
+                    <!-- Description - 高さを小さく -->
                     <div>
                         <label
                             for="description"
@@ -49,13 +72,13 @@
                         <textarea
                             id="description"
                             v-model="form.description"
-                            rows="3"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            rows="2"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         ></textarea>
                     </div>
 
                     <!-- Date/Time -->
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label
                                 for="due_date"
@@ -66,7 +89,7 @@
                                 type="date"
                                 id="due_date"
                                 v-model="form.due_date"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                         <div>
@@ -79,156 +102,102 @@
                                 type="time"
                                 id="due_time"
                                 v-model="form.due_time"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
                         </div>
                     </div>
 
-                    <!-- Category Selection -->
+                    <!-- Category Selection - コンパクトに -->
                     <div>
-                        <div class="flex justify-between items-center mb-1">
+                        <div class="flex justify-between items-center">
                             <label
                                 for="category_id"
                                 class="block text-sm font-medium text-gray-700"
                                 >カテゴリー</label
                             >
-                            <span
-                                class="text-xs text-blue-600"
-                                v-if="categoriesArray.length"
-                                >{{ categoriesArray.length }} カテゴリー</span
+                            <button
+                                type="button"
+                                @click="showCategoryInput = !showCategoryInput"
+                                class="text-xs text-blue-600 hover:text-blue-800"
                             >
-                            <span class="text-xs text-gray-500" v-else
-                                >カテゴリーなし</span
-                            >
+                                {{
+                                    showCategoryInput
+                                        ? "戻る"
+                                        : "新規カテゴリー"
+                                }}
+                            </button>
                         </div>
 
-                        <!-- Debug info to help trace category loading issues -->
-                        <div
-                            v-if="!categoriesArray.length"
-                            class="text-xs text-red-500 mb-2"
-                        >
-                            カテゴリーがロードされていません (Type:
-                            {{ typeof props.categories }}, IsArray:
-                            {{ Array.isArray(props.categories) }})
-                        </div>
-
-                        <div class="flex space-x-2">
+                        <!-- カテゴリー選択 -->
+                        <div v-if="!showCategoryInput" class="mt-1">
                             <select
                                 id="category_id"
                                 v-model="form.category_id"
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                class="block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             >
                                 <option value="">カテゴリーなし</option>
                                 <option
                                     v-for="category in categoriesArray"
                                     :key="category.id"
                                     :value="category.id"
-                                    :style="{
-                                        borderLeft: `4px solid ${category.color}`,
-                                    }"
                                 >
                                     {{ category.name }}
                                 </option>
                             </select>
-                            <button
-                                type="button"
-                                @click="showCategoryInput = !showCategoryInput"
-                                class="mt-1 inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                <svg
-                                    class="h-4 w-4"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M12 4v16m8-8H4"
-                                    />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
 
-                    <!-- New Category Input -->
-                    <div
-                        v-if="showCategoryInput"
-                        class="space-y-3 p-3 border border-gray-200 rounded-md bg-gray-50"
-                    >
-                        <div>
-                            <label
-                                for="new_category_name"
-                                class="block text-sm font-medium text-gray-700"
-                                >カテゴリー名</label
+                            <!-- 選択されたカテゴリー表示 -->
+                            <div
+                                v-if="form.category_id && getSelectedCategory"
+                                class="mt-1 p-1 bg-gray-50 rounded-md text-xs flex items-center"
                             >
-                            <input
-                                type="text"
-                                id="new_category_name"
-                                v-model="newCategory.name"
-                                required
-                                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            />
-                        </div>
-                        <div>
-                            <label
-                                for="new_category_color"
-                                class="block text-sm font-medium text-gray-700"
-                                >色</label
-                            >
-                            <div class="flex items-center space-x-2">
-                                <input
-                                    type="color"
-                                    id="new_category_color"
-                                    v-model="newCategory.color"
-                                    class="mt-1 block border border-gray-300 rounded-md shadow-sm h-8 w-24"
-                                />
                                 <div
-                                    class="flex-1 h-8 rounded-md"
+                                    class="w-3 h-3 rounded-full mr-1"
                                     :style="{
-                                        backgroundColor: newCategory.color,
+                                        backgroundColor:
+                                            getSelectedCategory.color,
                                     }"
                                 ></div>
+                                <span>{{ getSelectedCategory.name }}</span>
                             </div>
                         </div>
-                        <div class="flex justify-end space-x-2">
-                            <button
-                                type="button"
-                                @click="showCategoryInput = false"
-                                class="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-xs leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                キャンセル
-                            </button>
-                            <button
-                                type="button"
-                                @click="createCategory"
-                                class="inline-flex items-center px-3 py-1.5 border border-transparent shadow-sm text-xs leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                                追加
-                            </button>
+
+                        <!-- カテゴリー作成フォーム - コンパクトに -->
+                        <div
+                            v-if="showCategoryInput"
+                            class="mt-1 space-y-2 p-2 border border-gray-200 rounded-md bg-gray-50"
+                        >
+                            <div class="flex gap-2">
+                                <div class="flex-grow">
+                                    <input
+                                        type="text"
+                                        id="new_category_name"
+                                        v-model="newCategory.name"
+                                        placeholder="カテゴリー名"
+                                        class="w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 text-sm"
+                                    />
+                                </div>
+                                <div class="w-24">
+                                    <input
+                                        type="color"
+                                        id="new_category_color"
+                                        v-model="newCategory.color"
+                                        class="w-full h-7 border border-gray-300 rounded-md p-0"
+                                    />
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <button
+                                    type="button"
+                                    @click="createCategory"
+                                    class="px-2 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                                >
+                                    追加
+                                </button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Selected Category Display -->
-                    <div
-                        v-if="form.category_id && getSelectedCategory"
-                        class="rounded-md p-2 bg-gray-50"
-                    >
-                        <div class="flex items-center">
-                            <div
-                                class="w-4 h-4 rounded-full mr-2"
-                                :style="{
-                                    backgroundColor: getSelectedCategory.color,
-                                }"
-                            ></div>
-                            <span class="text-sm font-medium">{{
-                                getSelectedCategory.name
-                            }}</span>
-                        </div>
-                    </div>
-
-                    <!-- Recurrence Type -->
+                    <!-- Recurrence Type - コンパクトに -->
                     <div>
                         <label
                             for="recurrence_type"
@@ -238,7 +207,7 @@
                         <select
                             id="recurrence_type"
                             v-model="form.recurrence_type"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
                             <option value="none">繰り返しなし</option>
                             <option value="daily">毎日</option>
@@ -247,12 +216,13 @@
                         </select>
                     </div>
 
-                    <!-- Recurrence End Date -->
+                    <!-- Recurrence End Date - 条件付き表示をそのままに -->
                     <div
                         v-if="
                             form.recurrence_type &&
                             form.recurrence_type !== 'none'
                         "
+                        class="pb-1"
                     >
                         <label
                             for="recurrence_end_date"
@@ -263,41 +233,48 @@
                             type="date"
                             id="recurrence_end_date"
                             v-model="form.recurrence_end_date"
-                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-3 text-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         />
-                        <p class="mt-1 text-xs text-gray-500">
+                        <p class="mt-0.5 text-xs text-gray-500">
                             ※指定しない場合は1ヶ月間繰り返されます
                         </p>
                     </div>
                 </form>
             </div>
 
-            <!-- Footer -->
-            <div
-                class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
-            >
-                <button
-                    type="button"
-                    @click="submitForm"
-                    class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                    {{ mode === "add" ? "追加" : "保存" }}
-                </button>
-                <button
-                    type="button"
-                    @click="$emit('close')"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-                >
-                    キャンセル
-                </button>
-                <button
-                    v-if="mode === 'edit'"
-                    type="button"
-                    @click="deleteTask"
-                    class="mt-3 w-full inline-flex justify-center rounded-md border border-red-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-red-700 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:mt-0 sm:w-auto sm:text-sm"
-                >
-                    削除
-                </button>
+            <!-- Footer - 固定、コンパクトに -->
+            <div class="bg-gray-50 px-4 py-2 border-t border-gray-200 mt-auto">
+                <div class="flex justify-between items-center">
+                    <!-- 削除ボタン (編集時のみ) -->
+                    <div v-if="mode === 'edit'">
+                        <button
+                            type="button"
+                            @click="deleteTask"
+                            class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded border border-red-300 text-red-700 bg-white hover:bg-red-50"
+                        >
+                            削除
+                        </button>
+                    </div>
+                    <div v-else class="flex-1"></div>
+
+                    <!-- キャンセル/保存ボタン -->
+                    <div class="flex gap-2">
+                        <button
+                            type="button"
+                            @click="$emit('close')"
+                            class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                        >
+                            キャンセル
+                        </button>
+                        <button
+                            type="button"
+                            @click="submitForm"
+                            class="inline-flex items-center px-2.5 py-1.5 text-xs font-medium rounded border border-transparent text-white bg-blue-600 hover:bg-blue-700"
+                        >
+                            {{ mode === "add" ? "追加" : "保存" }}
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
