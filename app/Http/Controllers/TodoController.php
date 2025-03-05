@@ -304,7 +304,7 @@ public function apiIndex(Request $request): JsonResponse
         $user = Auth::user();
         Log::info('Fetching todos for user: ' . $user->id);
 
-        // Normal query logic continues...
+        // Start with a base query for todos
         $query = $user->todos()
             ->with("category")
             ->where("status", "!=", "trashed");
@@ -312,29 +312,23 @@ public function apiIndex(Request $request): JsonResponse
         // Add view-specific filtering
         switch ($view) {
             case "today":
-                $query->whereDate("due_date", $request->date ?? now()->format('Y-m-d'))
-                    ->where('status', 'pending');
+                // Simply filter by today's date, regardless of location
+                $query->whereDate("due_date", $date->format('Y-m-d'));
                 break;
             case "scheduled":
                 $query->whereNotNull("due_date")
-                    ->whereDate("due_date", ">=", now()->format('Y-m-d'))
+                    ->whereDate("due_date", ">", now()->format('Y-m-d'))
                     ->where('status', 'pending');
                 break;
             case "inbox":
-                $query->whereNull("due_date");
-                $query->where("status", "pending");
-                break;
-            case "completed":
-                $query->where("status", "completed");
-                break;
-            case "all":
-                // No additional filters needed
+                $query->whereNull("due_date")
+                    ->where("status", "pending");
                 break;
             case "calendar":
                 $query->whereBetween("due_date", [
-                    $request->start_date ?? now()->startOfMonth()->format('Y-m-d'),
-                    $request->end_date ?? now()->endOfMonth()->format('Y-m-d')
-                ])->where('status', 'pending');
+                    $request->start_date ?? $date->copy()->startOfMonth()->format('Y-m-d'),
+                    $request->end_date ?? $date->copy()->endOfMonth()->format('Y-m-d')
+                ]);
                 break;
             case "date":
                 // Filter by specific date
@@ -346,6 +340,9 @@ public function apiIndex(Request $request): JsonResponse
 
         // Log the query results for debugging
         Log::info('API todos query returned ' . count($todos) . ' results');
+        if (count($todos) > 0) {
+            Log::info('First todo: ' . json_encode($todos[0]));
+        }
 
         return response()->json($todos);
     }
@@ -358,29 +355,26 @@ public function apiIndex(Request $request): JsonResponse
 }
 
 // Fix for the update method
+// In TodoController.php
+// In app/Http/Controllers/TodoController.php - update the update method
 public function update(Request $request, Todo $todo)
 {
     Log::info('Update method called for todo ID: ' . $todo->id);
+    Log::info('Request is authenticated? ' . Auth::check());
 
-    // Handle authentication - return empty array for API and redirect for web
+    // Important: Print headers to debug CSRF and authentication
+    Log::info('Request headers: ' . json_encode($request->headers->all()));
+
+    // Handle authentication - but don't check for expectsJson since API request might not have this
     if (!Auth::check()) {
         Log::warning('Unauthenticated access attempt to update todo ' . $todo->id);
-        if ($request->expectsJson()) {
-            // Return 200 for API with empty data to prevent frontend errors
-            return response()->json([], 200);
-        } else {
-            return redirect()->route('login');
-        }
+        return response()->json(['error' => 'Unauthorized. Please log in again.'], 401);
     }
 
     // Check if user owns the todo
     if ($todo->user_id !== Auth::id()) {
         Log::warning('User ' . Auth::id() . ' attempted to update todo ' . $todo->id . ' belonging to user ' . $todo->user_id);
-        if ($request->expectsJson()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        } else {
-            return redirect()->route('todos.index')->with('error', 'Unauthorized');
-        }
+        return response()->json(['error' => 'You do not have permission to edit this task'], 403);
     }
 
     // Validate the request
@@ -390,46 +384,33 @@ public function update(Request $request, Todo $todo)
         'category_id' => 'nullable|exists:categories,id',
         'due_date' => 'nullable|date',
         'due_time' => 'nullable|string',
-        'priority' => 'nullable|in:low,medium,high',
         'recurrence_type' => 'nullable|in:none,daily,weekly,monthly',
         'recurrence_end_date' => 'nullable|date|after_or_equal:due_date',
     ]);
 
-    $data = $validated;
+    Log::info('Validated data: ' . json_encode($validated));
 
-    // Clear legacy location field and handle null dates
-    $data["location"] = null;
-    if (!isset($data["due_date"])) {
-        $data["due_date"] = null;
-        $data["due_time"] = null;
-    }
+    try {
+        // Update the todo
+        $todo->update($validated);
 
-    Log::info('Updating todo ' . $todo->id . ' with data: ' . json_encode($data));
-    $todo->update($data);
+        // Reload the model to get fresh data
+        $todo->refresh();
+        $todo->load('category');
 
-    // Handle recurring tasks
-    if (
-        !empty($data["recurrence_type"]) &&
-        $data["recurrence_type"] !== "none"
-    ) {
-        // Add user_id to data for createRecurringTasks
-        $data["user_id"] = $todo->user_id;
-        $this->createRecurringTasks($data);
-    }
+        Log::info('Todo updated successfully: ' . json_encode($todo));
 
-    if ($request->expectsJson()) {
-        // Return full todo data with relationships
-        $freshTodo = $todo->fresh()->load('category');
         return response()->json([
             'message' => 'タスクを更新しました',
-            'todo' => $freshTodo->load('category'),
-            'categories' => Auth::user()->categories()->orderBy('name')->get()
+            'todo' => $todo
         ]);
+    } catch (\Exception $e) {
+        Log::error('Error updating todo: ' . $e->getMessage());
+        return response()->json([
+            'error' => 'Update failed: ' . $e->getMessage()
+        ], 500);
     }
-
-    return back()->with("success", "タスクを更新しました");
 }
-
 // Fix for the show method
 public function show(Todo $todo)
 {

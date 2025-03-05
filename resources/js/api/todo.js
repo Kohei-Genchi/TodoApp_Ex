@@ -55,40 +55,45 @@ export default {
     },
 
     // 既存のタスクを更新
-    updateTask(id, taskData) {
-        console.log('API updateTask called with ID:', id, 'and data:', taskData);
+    // In resources/js/api/todo.js - update the updateTask function
+updateTask(id, taskData) {
+    console.log('API updateTask called with ID:', id, 'and data:', taskData);
 
-        if (!id && id !== 0) {
-            console.error('Error: updateTask called without an ID');
-            return Promise.reject(new Error('No task ID provided'));
-        }
+    if (!id && id !== 0) {
+        console.error('Error: updateTask called without an ID');
+        return Promise.reject(new Error('No task ID provided'));
+    }
 
-        // Make sure we have the CSRF token
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        if (!csrfToken) {
-            console.warn('CSRF token not found, attempting to update task anyway');
-        }
+    // Get CSRF token directly from the meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-        // Add CSRF token to headers
-        const headers = {
-            'X-CSRF-TOKEN': csrfToken,
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest'
-        };
+    // Add CSRF token and other required headers
+    const headers = {
+        'X-CSRF-TOKEN': csrfToken,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+    };
 
-        console.log('Updating task with headers:', headers);
+    // Log the full request for debugging
+    console.log('Full update request:', {
+        url: `/api/todos/${id}`,
+        method: 'PUT',
+        headers,
+        data: taskData
+    });
 
-        // Make sure the URL is correctly formed
-        const url = `/api/todos/${id}`;
-        console.log('PUT request to URL:', url);
-
-        return axios.put(url, taskData, { headers })
-            .catch(error => {
-                console.error('Error in updateTask:', error.response || error);
-                throw error;
-            });
-    },
+    // Use axios.post with _method instead of axios.put
+    // Laravel works better with POST + _method for CSRF protection
+    return axios.post(`/api/todos/${id}`, {
+        ...taskData,
+        _method: 'PUT'  // This tells Laravel to treat it as a PUT request
+    }, { headers })
+    .catch(error => {
+        console.error('Error in updateTask:', error.response || error);
+        throw error;
+    });
+},
 
     // タスクの完了状態をトグル
     toggleTask(id) {

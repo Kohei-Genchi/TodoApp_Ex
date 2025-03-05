@@ -16,8 +16,29 @@ if (document.getElementById('todo-app')) {
     const vm = app.mount('#todo-app');
 
     // Create a global function for editing todos from outside Vue components
-    window.editTodo = function(taskIdOrData) {
-        console.log('Global editTodo called with:', taskIdOrData);
+    window.editTodo = function(taskIdOrData, todoData = null) {
+        console.log('Global editTodo called with:', taskIdOrData, todoData);
+
+        // Handle when todoData is passed as a second parameter (from HTML data attributes)
+        if (todoData && typeof todoData === 'object') {
+            console.log('Using todoData from second parameter:', todoData);
+
+            // Try to directly call the openEditTaskModal function with the todoData object
+            if (vm && typeof vm.openEditTaskModal === 'function') {
+                if (!todoData.id && taskIdOrData) {
+                    todoData.id = Number(taskIdOrData);
+                }
+                vm.openEditTaskModal(todoData);
+                return;
+            }
+
+            // Fallback to event dispatch
+            const event = new CustomEvent('edit-todo', {
+                detail: { id: Number(taskIdOrData), data: todoData }
+            });
+            document.getElementById('todo-app').dispatchEvent(event);
+            return;
+        }
 
         if (!taskIdOrData) {
             console.error('No task ID or data provided to editTodo');
@@ -29,10 +50,10 @@ if (document.getElementById('todo-app')) {
             if (typeof taskIdOrData === 'number' || (typeof taskIdOrData === 'string' && !isNaN(parseInt(taskIdOrData)))) {
                 const id = Number(taskIdOrData);
 
-                // Try to directly call the openEditTaskModal function if available
-                if (vm && typeof vm.openEditTaskModal === 'function') {
-                    console.log('Directly calling openEditTaskModal with ID:', id);
-                    vm.openEditTaskModal({ id });
+                // Try to directly call the fetchAndEditTask function if available
+                if (vm && typeof vm.fetchAndEditTask === 'function') {
+                    console.log('Directly calling fetchAndEditTask with ID:', id);
+                    vm.fetchAndEditTask(id);
                     return;
                 }
 

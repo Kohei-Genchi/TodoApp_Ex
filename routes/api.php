@@ -21,19 +21,21 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 });
 
 // Todo API Routes
-Route::prefix('todos')->group(function () {
+// In routes/api.php
+
+// Don't use middleware('auth:sanctum') for now, just use web middleware
+Route::prefix('todos')->middleware(['web'])->group(function () {
     Route::get('/', [TodoController::class, 'apiIndex']);
     Route::post('/', [TodoController::class, 'store']);
     Route::get('/trashed', [TodoController::class, 'trashedApi']);
     Route::delete('/trash/empty', [TodoController::class, 'emptyTrash']);
     Route::get('/{todo}', [TodoController::class, 'show']);
-    Route::put('/{todo}', [TodoController::class, 'update']);
+    Route::match(['put', 'post'], '/{todo}', [TodoController::class, 'update']);  // Accept both PUT and POST
     Route::patch('/{todo}/toggle', [TodoController::class, 'toggle']);
     Route::patch('/{todo}/trash', [TodoController::class, 'trash']);
     Route::patch('/{todo}/restore', [TodoController::class, 'restore']);
     Route::delete('/{todo}', [TodoController::class, 'destroy']);
 });
-
 // Category API Routes
 Route::prefix('categories')->group(function () {
     Route::get('/', [CategoryApiController::class, 'index']);

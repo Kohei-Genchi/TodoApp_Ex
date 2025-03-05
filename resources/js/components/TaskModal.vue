@@ -313,48 +313,46 @@ export default {
     });
 
     // Form submission
-    function submitForm() {
-      console.log('Submit button clicked');
-      console.log('Submitting form with data:', { ...form });
-      console.log('Task ID from props:', props.todoId);
+    // Replace your current submitForm function with this corrected version
+function submitForm() {
+  console.log('Submit button clicked');
+  console.log('Submitting form with data:', { ...form });
+  console.log('Task ID from props:', props.todoId);
 
-      if (!form.title.trim()) {
-        alert('タイトルを入力してください');
-        return;
-      }
+  if (!form.title.trim()) {
+    alert('タイトルを入力してください');
+    return;
+  }
 
-      // Prepare data for submission
-      const formData = { ...form };
+  // Prepare data for submission
+  const formData = { ...form };
 
-      // Convert category_id to number if it's a string and not empty
-      if (formData.category_id !== '' && formData.category_id !== null) {
-        formData.category_id = Number(formData.category_id);
-      } else {
-        // Ensure it's null and not an empty string
-        formData.category_id = null;
-      }
+  // Convert category_id to number if it's a string and not empty
+  if (formData.category_id !== '' && formData.category_id !== null) {
+    formData.category_id = Number(formData.category_id);
+  } else {
+    // Ensure it's null and not an empty string
+    formData.category_id = null;
+  }
 
-      console.log('Processed form data for submission:', formData);
+  console.log('Processed form data for submission:', formData);
 
-      // Include task ID in the submission for edit mode
-      if (props.mode === 'edit' && props.todoId) {
-        console.log('Emitting submit event with task ID:', props.todoId);
-        formData.id = props.todoId;
-      }
+  // Include task ID in the submission for edit mode
+  if (props.mode === 'edit' && props.todoId) {
+    console.log('Emitting submit event with task ID:', props.todoId);
+    formData.id = props.todoId;
+  }
 
-      // Close modal after submission
-      // Emit with full category data
-      // Update existing todo in the list
-      const updatedTodo = {
-        ...formData,
-        category: props.categories.find(c => c.id === formData.category_id)
-      };
+  // Update existing todo in the list with category data
+  const updatedTodo = {
+    ...formData,
+    category: props.categories.find(c => c.id === formData.category_id)
+  };
 
-      emit('submit', updatedTodo);
-      emit('update:todos', updatedTodo);
-      emit('update:categories', response.data.categories);
-      emit('close');
-    }
+  // Emit only the necessary events
+  emit('submit', updatedTodo);
+  emit('close');
+}
 
     // Create new category
     async function createCategory() {

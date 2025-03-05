@@ -188,27 +188,37 @@ export default {
 
     // Date formatting helper - CRITICAL for comparing dates correctly
     function formatDateForComparison(dateString) {
-      if (!dateString) return '';
+  if (!dateString) return '';
 
+  try {
+    // Handle different date formats
+    let date;
+    if (typeof dateString === 'string') {
       // If it's already a YYYY-MM-DD string, return it
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
-
-      try {
-        // Create a date object from the string
-        const date = new Date(dateString);
-
-        // Use local timezone functions to get accurate date parts
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-
-        // Return date in YYYY-MM-DD format using local timezone
-        return `${year}-${month}-${day}`;
-      } catch (e) {
-        console.error('Error formatting date:', e, dateString);
-        return '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+        return dateString;
       }
+      date = new Date(dateString);
+    } else if (dateString instanceof Date) {
+      date = dateString;
+    } else {
+      console.error('Invalid date format:', dateString);
+      return '';
     }
+
+    // Ensure it's a valid date
+    if (isNaN(date.getTime())) {
+      console.error('Invalid date:', dateString);
+      return '';
+    }
+
+    // Format to YYYY-MM-DD using local timezone
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  } catch (e) {
+    console.error('Error formatting date:', e, dateString);
+    return '';
+  }
+}
 
     // Computed properties
     const formattedDate = computed(() => {
@@ -243,18 +253,30 @@ export default {
     });
 
     const filteredTodos = computed(() => {
-      const formattedCurrentDate = formatDateForComparison(currentDate.value);
-      console.log('Filtering todos for date:', formattedCurrentDate);
+  const formattedCurrentDate = formatDateForComparison(currentDate.value);
+  console.log('Filtering todos for date:', formattedCurrentDate);
+  console.log('Available todos:', todos.value.length);
 
-      const filtered = todos.value.filter(todo => {
-        // Format the todo's due_date in local timezone
-        const formattedTodoDate = formatDateForComparison(todo.due_date);
-        return formattedTodoDate === formattedCurrentDate && todo.status !== 'trashed';
-      });
+  // Show more details about available todos to debug
+  if (todos.value.length > 0) {
+    console.log('Todo dates:', todos.value.map(t => ({
+      id: t.id,
+      title: t.title,
+      due_date: t.due_date,
+      formatted: formatDateForComparison(t.due_date)
+    })));
+  }
 
-      console.log('Filtered todos count:', filtered.length);
-      return filtered;
-    });
+  const filtered = todos.value.filter(todo => {
+    // Format the todo's due_date in local timezone
+    const formattedTodoDate = formatDateForComparison(todo.due_date);
+    const match = formattedTodoDate === formattedCurrentDate && todo.status !== 'trashed';
+    return match;
+  });
+
+  console.log('Filtered todos count:', filtered.length);
+  return filtered;
+});
 
     // Methods
     async function loadTasks() {
@@ -263,12 +285,33 @@ export default {
     const response = await TodoApi.getTasks(currentView.value, currentDate.value);
     console.log('API response data:', response.data);
 
+    if (!Array.isArray(response.data)) {
+      console.error('API response is not an array:', response.data);
+      todos.value = [];
+      return;
+    }
+
+    // Process the response to ensure consistency
     todos.value = response.data.map(todo => {
-      if (todo.due_date) {
-        // Convert date to local timezone format
-        todo.formatted_due_date = formatDateForComparison(todo.due_date);
+      // Make a deep copy to avoid reference issues
+      const processedTodo = { ...todo };
+
+      // Ensure ID is a number
+      if (processedTodo.id !== undefined) {
+        processedTodo.id = Number(processedTodo.id);
       }
-      return todo;
+
+      // Ensure category_id is a number if present
+      if (processedTodo.category_id !== null && processedTodo.category_id !== undefined) {
+        processedTodo.category_id = Number(processedTodo.category_id);
+      }
+
+      // Add formatted date for easier comparison
+      if (processedTodo.due_date) {
+        processedTodo.formatted_due_date = formatDateForComparison(processedTodo.due_date);
+      }
+
+      return processedTodo;
     });
 
     console.log('Todos after processing:', todos.value);
@@ -503,7 +546,8 @@ export default {
       }
     }
 
-    async function submitTask(taskData) {
+    // Add this to your TodoApp.vue setup function
+async function submitTask(taskData) {
   try {
     console.log('submitTask called with:', taskData);
 
@@ -522,10 +566,12 @@ export default {
     console.log('Submitting task with prepared data:', preparedData);
     console.log('Task mode:', taskModalMode.value, 'Selected task ID:', selectedTaskId.value);
 
+    let response;
+
     if (taskModalMode.value === 'add') {
       // New task addition
       console.log('Creating new task with TodoApi.createTask()');
-      const response = await TodoApi.createTask(preparedData);
+      response = await TodoApi.createTask(preparedData);
       console.log('Task created response:', response);
       notification.value.show('タスクを追加しました');
     } else {
@@ -540,17 +586,24 @@ export default {
 
       // Update existing task
       console.log(`Updating task ID ${taskId} with TodoApi.updateTask()`);
-      const response = await TodoApi.updateTask(taskId, preparedData);
+      response = await TodoApi.updateTask(taskId, preparedData);
       console.log('Task updated response:', response);
+
+      // Check if the response contains the updated todo data
+      if (response.data && response.data.todo) {
+        console.log('API returned updated todo:', response.data.todo);
+      }
+
       notification.value.show('タスクを更新しました');
     }
 
     closeTaskModal();
+
+    // Reload relevant data based on current view
     if (currentView.value === 'trash') {
-      loadTrashedTasks();
+      await loadTrashedTasks();
     } else {
-      // After updating a task, we need to reload all tasks to make sure we see the changes
-      loadTasks();
+      await loadTasks();
     }
   } catch (error) {
     console.error('Error submitting task:', error);

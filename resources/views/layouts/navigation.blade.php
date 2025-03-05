@@ -75,15 +75,16 @@
                     @else
                     @foreach($memos as $memo)
                     <div class="group bg-gray-700 hover:bg-gray-600 rounded py-1.5 px-2 cursor-pointer transition-colors"
-                         onclick="editTodo({{ $memo->id }}, {{ json_encode([
-                            'title' => $memo->title,
-                            'due_date' => $memo->due_date ? $memo->due_date->format('Y-m-d') : null,
-                            'due_time' => $memo->due_time ? $memo->due_time->format('H:i') : null,
-                            'category_id' => $memo->category_id,
-                            'recurrence_type' => $memo->recurrence_type,
-                            'recurrence_end_date' => $memo->recurrence_end_date ? $memo->recurrence_end_date->format('Y-m-d') : null,
-                        ]) }})"
-                         style="border-left: 3px solid {{ $memo->category ? $memo->category->color : '#6B7280' }}">
+     onclick="editTodo({{ $memo->id }}, {{ json_encode([
+        'id' => $memo->id,
+        'title' => $memo->title,
+        'due_date' => $memo->due_date ? $memo->due_date->format('Y-m-d') : null,
+        'due_time' => $memo->due_time ? $memo->due_time->format('H:i') : null,
+        'category_id' => $memo->category_id,
+        'recurrence_type' => $memo->recurrence_type,
+        'recurrence_end_date' => $memo->recurrence_end_date ? $memo->recurrence_end_date->format('Y-m-d') : null,
+     ]) }})"
+     style="border-left: 3px solid {{ $memo->category ? $memo->category->color : '#6B7280' }}">
                         <div class="flex items-center justify-between">
                             <div class="text-sm truncate pr-1">{{ $memo->title }}</div>
                             <div class="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
