@@ -213,7 +213,7 @@ class TodoController extends Controller
             ]);
         }
 
-        return back()->with("success", "タスクをゴミ箱に移動しました");
+        return back();
     }
 
     public function trashed(): RedirectResponse

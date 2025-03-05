@@ -1,58 +1,71 @@
 <template>
     <div class="bg-gray-100 min-h-screen main-content">
-        <!-- ヘッダー -->
+        <!-- ヘッダー（「+ 新しいタスク」ボタンを含む） -->
         <header class="bg-white shadow">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-                <div class="flex justify-between items-center">
-                    <h1 class="text-xl font-semibold text-gray-900">
-                        Todo App
-                    </h1>
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+                <div class="flex flex-col space-y-2">
+                    <!-- App Title and View Selector Row -->
+                    <div class="flex justify-between items-center">
+                        <h1 class="text-xl font-semibold text-gray-900">
+                            Todo App
+                        </h1>
 
-                    <!-- ビューセレクター (アイコンなし) -->
-                    <div class="flex space-x-2">
+                        <!-- ビューセレクター -->
+                        <div class="flex space-x-2">
+                            <button
+                                @click="setView('today')"
+                                :class="[
+                                    'px-3 py-1 rounded-md text-sm font-medium',
+                                    currentView === 'today'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+                                ]"
+                            >
+                                今日
+                            </button>
+                            <button
+                                @click="showCalendarView()"
+                                :class="[
+                                    'px-3 py-1 rounded-md text-sm font-medium',
+                                    currentView === 'calendar'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+                                ]"
+                            >
+                                カレンダー
+                            </button>
+                            <button
+                                @click="showTrashView()"
+                                :class="[
+                                    'px-3 py-1 rounded-md text-sm font-medium',
+                                    currentView === 'trash'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+                                ]"
+                            >
+                                ゴミ箱
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Task Button (always visible for non-trash views) -->
+                    <div v-if="currentView !== 'trash'">
                         <button
-                            @click="setView('today')"
-                            :class="[
-                                'px-3 py-1 rounded-md text-sm font-medium',
-                                currentView === 'today'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                            ]"
+                            @click="openAddTaskModal"
+                            class="w-full py-1.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                         >
-                            今日
-                        </button>
-                        <button
-                            @click="showCalendarView()"
-                            :class="[
-                                'px-3 py-1 rounded-md text-sm font-medium',
-                                currentView === 'calendar'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                            ]"
-                        >
-                            カレンダー
-                        </button>
-                        <button
-                            @click="showTrashView()"
-                            :class="[
-                                'px-3 py-1 rounded-md text-sm font-medium',
-                                currentView === 'trash'
-                                    ? 'bg-blue-600 text-white'
-                                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300',
-                            ]"
-                        >
-                            ゴミ箱
+                            + 新しいタスク
                         </button>
                     </div>
                 </div>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <!-- 日付ナビゲーション (テキストベース) -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <!-- 日付ナビゲーション -->
             <div
                 v-if="currentView !== 'calendar' && currentView !== 'trash'"
-                class="mb-6 flex justify-between items-center"
+                class="mb-4 flex justify-between items-center"
             >
                 <button
                     @click="previousDay"
@@ -73,10 +86,10 @@
                 </button>
             </div>
 
-            <!-- カレンダー月ナビゲーション (テキストベース) -->
+            <!-- カレンダー月ナビゲーション -->
             <div
                 v-if="currentView === 'calendar'"
-                class="mb-6 flex justify-between items-center"
+                class="mb-4 flex justify-between items-center"
             >
                 <button
                     @click="previousMonth"
@@ -97,24 +110,14 @@
                 </button>
             </div>
 
-            <!-- タスク追加ボタン -->
-            <div v-if="currentView !== 'trash'" class="mb-6">
-                <button
-                    @click="openAddTaskModal"
-                    class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                    + 新しいタスク
-                </button>
-            </div>
-
             <!-- ゴミ箱を空にするボタン -->
             <div
                 v-if="currentView === 'trash' && trashedTodos.length > 0"
-                class="mb-6"
+                class="mb-4"
             >
                 <button
                     @click="confirmEmptyTrash"
-                    class="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    class="w-full py-1.5 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 >
                     ゴミ箱を空にする
                 </button>
@@ -700,7 +703,6 @@ export default {
                     console.log("Creating new task with TodoApi.createTask()");
                     response = await TodoApi.createTask(preparedData);
                     console.log("Task created response:", response);
-                    notification.value.show("タスクを追加しました");
                 } else {
                     // Ensure task ID is available before updating
                     const taskId =
@@ -709,10 +711,7 @@ export default {
 
                     if (!taskId && taskId !== 0) {
                         console.error("No task ID available for update");
-                        notification.value.show(
-                            "タスクの更新に失敗しました: タスクIDが見つかりません",
-                            "error",
-                        );
+                        notification.value.show("error");
                         return;
                     }
 
@@ -734,8 +733,6 @@ export default {
                     response = await TodoApi.updateTask(taskId, preparedData);
                     console.log("Task updated response:", response);
 
-                    notification.value.show("タスクを更新しました");
-
                     // If we're adding a due date to a task from memo list, refresh memo list immediately
                     if (isAddingDueDateToMemo) {
                         console.log(
@@ -755,7 +752,6 @@ export default {
                 }
             } catch (error) {
                 console.error("Error submitting task:", error);
-                notification.value.show("タスクの保存に失敗しました", "error");
             }
         }
         async function refreshMemoList() {
