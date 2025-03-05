@@ -21,6 +21,39 @@ Route::get('/guest-login', [GuestLoginController::class, 'login'])
     ->name('guest.login');
 
 
+// In routes/web.php
+Route::get('/debug-categories', function() {
+    try {
+        if (!Auth::check()) {
+            return "Not logged in";
+        }
+
+        $user = Auth::user();
+
+        // Direct DB query
+        $rawCategories = DB::select("SELECT * FROM categories WHERE user_id = ?", [$user->id]);
+
+        // Eloquent query
+        $categories = $user->categories()->get();
+
+        return [
+            'user_id' => $user->id,
+            'raw_categories_count' => count($rawCategories),
+            'raw_categories' => $rawCategories,
+            'eloquent_categories_count' => $categories->count(),
+            'eloquent_categories' => $categories
+        ];
+    } catch (\Exception $e) {
+        return [
+            'error' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ];
+    }
+});
+// In routes/web.php
+Route::get('/api/web-categories', [App\Http\Controllers\Api\CategoryApiController::class, 'index']);
+
 Route::get('/todos', [TodoController::class, 'index'])->name('todos.index');
 
 

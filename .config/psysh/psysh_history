@@ -1,5 +1,7 @@
 Todo::where('location', 'TODAY')->where('status', 'completed')->whereDate('due_date', \Carbon\Carbon::yesterday()->format('Y-m-d'))->count();
 Todo::where('location', 'TODAY')->where('status', 'pending')->whereDate('due_date', \Carbon\Carbon::yesterday()->format('Y-m-d'))->count();
-
 Todo::where('location', 'TODAY')->where('status', 'completed')->whereDate('due_date', \Carbon\Carbon::yesterday()->format('Y-m-d'))->count();
 Todo::where('location', 'TODAY')->where('status', 'completed')->whereDate('due_date', \Carbon\Carbon::yesterday()->format('Y-m-d'))->count();
+$user = App\Models\User::find(1);
+$user->categories()->count();
+$user->categories()->get();

@@ -7,16 +7,17 @@ export default {
     /**
      * Get all categories for the authenticated user
      */
-    getCategories() {
-        console.log('API getCategories called');
-        return axios.get('/api/categories', {
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
-        });
-    },
+    // In resources/js/api/category.js
+// In resources/js/api/category.js
+getCategories() {
+    console.log('API getCategories called (web route)');
+    return axios.get('/api/web-categories', {
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    });
+},
 
     /**
      * Create a new category

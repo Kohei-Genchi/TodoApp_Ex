@@ -334,16 +334,27 @@ export default {
     async function loadCategories() {
   console.log('Loading categories...');
   try {
+    // Add a timestamp to avoid cache issues
     const response = await CategoryApi.getCategories();
     console.log('Categories API response:', response);
-    console.log('Categories loaded:', response.data);
-    categories.value = response.data || [];
 
-    // Make sure categories are properly formatted for selection
-    categories.value.forEach(cat => {
-      // Ensure id is a number for consistency
-      cat.id = Number(cat.id);
-    });
+    if (!response || !response.data) {
+      console.error('Invalid response from categories API:', response);
+      categories.value = [];
+      return;
+    }
+
+    console.log('Categories loaded:', response.data);
+
+    // Ensure the categories are properly formatted
+    categories.value = Array.isArray(response.data) ? response.data.map(cat => {
+      return {
+        id: Number(cat.id),
+        name: cat.name || 'Unnamed Category',
+        color: cat.color || '#cccccc',
+        user_id: cat.user_id
+      };
+    }) : [];
 
     console.log('Categories processed:', categories.value);
   } catch (error) {
@@ -351,7 +362,6 @@ export default {
     notification.value?.show('カテゴリーの読み込みに失敗しました', 'error');
   }
 }
-
     function setView(view) {
       currentView.value = view;
       if (view === 'today') {

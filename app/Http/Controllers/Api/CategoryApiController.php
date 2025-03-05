@@ -19,35 +19,57 @@ class CategoryApiController extends Controller
     /**
      * Get all categories for the authenticated user.
      */
-    public function index(): JsonResponse
-    {
-        try {
-            // For unauthenticated access, return empty array instead of 401
-            if (!Auth::check()) {
-                Log::info('Unauthenticated access to categories API - returning empty array');
-                return response()->json([]);
-            }
+    /**
+ * Get all categories for the authenticated user.
+ */
+/**
+ * Get all categories for the authenticated user.
+ */
+public function index(): JsonResponse
+{
+    try {
+        // For debugging: Log the authentication status
+        Log::info('CategoryApiController index - Auth::check(): ' . (Auth::check() ? 'true' : 'false'));
 
-            $user = Auth::user();
-            Log::info('Fetching categories for user ID: ' . $user->id);
+        if (!Auth::check()) {
+            Log::info('Unauthenticated access to categories API - returning empty array');
+            return response()->json([]);
+        }
 
-            $categories = $user->categories()->orderBy('name')->get();
+        $user = Auth::user();
+        Log::info('Fetching categories for user ID: ' . $user->id);
 
-            // Log the fetched categories
-            Log::info('Fetched ' . count($categories) . ' categories for user');
-            Log::debug('Categories data: ' . json_encode($categories));
+        // Get categories and log the SQL query
+        $categories = $user->categories()->orderBy('name')->get();
 
-            return response()->json($categories);
+        // Debug: Log raw query
+        $bindings = ['user_id' => $user->id];
+        $queryLog = "SELECT * FROM categories WHERE user_id = :user_id ORDER BY name";
+        Log::info('Category query:', [$queryLog, $bindings]);
 
-        } catch (\Exception $e) {
-            Log::error('Error in CategoryApiController->index: ' . $e->getMessage());
+        // Manual DB query to double-check
+        $rawCategories = \DB::select("SELECT * FROM categories WHERE user_id = ?", [$user->id]);
+        Log::info('Raw DB query found ' . count($rawCategories) . ' categories for user ' . $user->id);
+
+        // Log the fetched categories
+        Log::info('Fetched ' . count($categories) . ' categories for user');
+        Log::debug('Categories data: ' . json_encode($categories));
+
+        return response()->json($categories);
+    } catch (\Exception $e) {
+        Log::error('Error in CategoryApiController->index: ' . $e->getMessage());
+        // Return error details in development environment
+        if (config('app.debug')) {
             return response()->json([
-                'success' => false,
-                'message' => 'Error fetching categories',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
             ], 500);
         }
+        return response()->json([]);
     }
+}
 
     /**
      * Store a newly created category via AJAX.
