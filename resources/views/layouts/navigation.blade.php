@@ -59,7 +59,7 @@
                     </div>
                 </div>
 
-                <div class="space-y-1 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                <div class="memo-list-container sidebar-memo-list space-y-1 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
                     @php
                         $memos = Auth::user()->todos()
                             ->with('category')

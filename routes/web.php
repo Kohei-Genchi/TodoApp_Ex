@@ -118,7 +118,18 @@ Route::middleware(["auth"])->group(function () {
     Route::delete("/profile", [ProfileController::class, "destroy"])->name(
         "profile.destroy"
     );
+    // routes/web.php に追加
+    Route::get("/api/memos-partial", function () {
+        $memos = Auth::user()
+            ->todos()
+            ->with("category")
+            ->whereNull("due_date")
+            ->where("status", "pending")
+            ->orderBy("created_at", "desc")
+            ->get();
 
+        return view("layouts.partials.memo-list", compact("memos"));
+    });
     Route::post("/api/categories", [
         App\Http\Controllers\Api\CategoryApiController::class,
         "store",
