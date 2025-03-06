@@ -15,9 +15,9 @@ Artisan::command("inspire", function () {
     ->hourly();
 
 // Set up scheduler
-Schedule::command("todos:cleanup")->dailyAt("09:55");
+Schedule::command("todos:cleanup")->dailyAt("14:07");
 
 // メール送信のスケジュール設定
-Schedule::command("reminders:morning")->dailyAt("8:00");
+Schedule::command("reminders:morning")->dailyAt("13:58");
 
-Schedule::command("reminders:evening")->dailyAt("22:00");
+Schedule::command("reminders:evening")->dailyAt("13:58");

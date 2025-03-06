@@ -244,7 +244,7 @@ class TodoController extends Controller
                 ]);
             }
 
-            return back()->with("success", "繰り返しタスクを削除しました");
+            return back();
         }
 
         // 単一タスクの削除（既存のコード）

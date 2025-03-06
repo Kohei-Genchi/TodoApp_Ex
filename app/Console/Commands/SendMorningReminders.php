@@ -14,9 +14,8 @@ class SendMorningReminders extends Command
      *
      * @var string
      */
-    protected $signature = 'reminders:morning';
-    protected $description = 'Send morning reminders to users about their tasks';
-
+    protected $signature = "reminders:morning";
+    protected $description = "Send morning reminders to users about their tasks";
 
     /**
      * The console command description.
@@ -29,43 +28,62 @@ class SendMorningReminders extends Command
      */
     // In app/Console/Commands/SendMorningReminders.php
 
-public function handle()
-{
-    try {
-        $users = User::all();
-        $count = 0;
+    // app/Console/Commands/SendMorningReminders.php の修正例
 
-        foreach ($users as $user) {
-            // Only send if user has an email and has tasks for today
-            if ($user->email && $user->todos()
-                ->where('status', 'pending')
-                ->whereDate('due_date', today())
-                ->count() > 0) {
+    public function handle()
+    {
+        try {
+            $this->info("実行日時: " . now()->format("Y-m-d H:i:s"));
 
-                $todosCount = $user->todos()
-                    ->where('status', 'pending')
-                    ->whereDate('due_date', today())
-                    ->count();
+            $users = User::all();
+            $this->info("総ユーザー数: " . $users->count());
 
-                $user->notify(new TaskReminder(
-                    'Good morning! Here\'s a reminder about your tasks for today.',
-                    $todosCount
-                ));
+            $count = 0;
 
-                $count++;
-                $this->info("Reminder sent to {$user->email}");
+            foreach ($users as $user) {
+                $pendingTasks = $user
+                    ->todos()
+                    ->where("status", "pending")
+                    ->whereDate("due_date", today())
+                    ->get();
+
+                $this->info(
+                    "{$user->name}(ID:{$user->id}) - 今日のタスク: {$pendingTasks->count()}件"
+                );
+
+                if ($pendingTasks->count() > 0) {
+                    foreach ($pendingTasks as $task) {
+                        $this->info(
+                            "- タスク: {$task->title}, 期限: {$task->due_date}"
+                        );
+                    }
+                }
+
+                if ($user->email && $pendingTasks->count() > 0) {
+                    try {
+                        $user->notify(
+                            new TaskReminder(
+                                "今日のタスクのリマインダーです",
+                                $pendingTasks->count()
+                            )
+                        );
+                        $count++;
+                        $this->info("通知送信: {$user->email}");
+                    } catch (\Exception $e) {
+                        $this->error("通知送信エラー: " . $e->getMessage());
+                    }
+                } else {
+                    if (!$user->email) {
+                        $this->warn("メールアドレスなし: {$user->name}");
+                    }
+                }
             }
+
+            $this->info("通知送信完了: {$count}ユーザー");
+            return Command::SUCCESS;
+        } catch (\Exception $e) {
+            $this->error("エラー発生: " . $e->getMessage());
+            return Command::FAILURE;
         }
-
-        $this->info("Morning reminders sent to {$count} users");
-        Log::info("Morning reminders sent to {$count} users");
-
-        return Command::SUCCESS;
-    } catch (\Exception $e) {
-        Log::error("Error sending morning reminders: " . $e->getMessage());
-        $this->error("Error sending reminders: " . $e->getMessage());
-
-        return Command::FAILURE;
     }
-}
 }
