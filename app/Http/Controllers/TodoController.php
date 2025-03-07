@@ -303,6 +303,18 @@ class TodoController extends Controller
             // タスクの更新
             $todo->update($validated);
             $todo->refresh();
+
+            // 日付が変更された場合、locationを再計算
+            if (isset($validated['due_date'])) {
+                // 日付を Carbon インスタンスに変換して比較
+                $dueDate = now()->parse($validated['due_date'])->startOfDay();
+                $today = now()->startOfDay();
+
+                // locationを更新
+                $todo->location = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
+                $todo->save();
+            }
+
             $todo->load('category');
 
             // Return direct array for frontend compatibility
@@ -419,7 +431,9 @@ class TodoController extends Controller
         foreach ($dates as $date) {
             $newTaskData = $taskData;
             $newTaskData['due_date'] = $date->format('Y-m-d');
-            $newTaskData['location'] = $date->isToday() ? 'TODAY' : 'SCHEDULED';
+            // 日付を比較して場所を決定
+            $today = now()->startOfDay();
+            $newTaskData['location'] = $date->startOfDay()->equalTo($today) ? 'TODAY' : 'SCHEDULED';
 
             // 繰り返し情報は不要なので削除
             unset($newTaskData['recurrence_type'], $newTaskData['recurrence_end_date']);
@@ -506,10 +520,12 @@ class TodoController extends Controller
         $taskData['user_id'] = Auth::id();
 
         // タスクの場所（location）を設定
-        if (isset($taskData['due_date'])) {
-            $taskData['location'] = $taskData['due_date'] === now()->format('Y-m-d')
-                ? 'TODAY'
-                : 'SCHEDULED';
+        if (isset($taskData['due_date']) && $taskData['due_date']) {
+            // 日付を Carbon インスタンスに変換して比較
+            $dueDate = now()->parse($taskData['due_date'])->startOfDay();
+            $today = now()->startOfDay();
+
+            $taskData['location'] = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
         } else {
             $taskData['location'] = 'INBOX';
             $taskData['due_date'] = null;
@@ -539,7 +555,11 @@ class TodoController extends Controller
     private function determineTaskLocation(Todo $todo): void
     {
         if ($todo->due_date) {
-            $todo->location = $todo->due_date->isToday() ? 'TODAY' : 'SCHEDULED';
+            // 日付を Carbon インスタンスに変換して比較
+            $dueDate = $todo->due_date->startOfDay();
+            $today = now()->startOfDay();
+
+            $todo->location = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
         } else {
             $todo->location = 'INBOX';
         }
