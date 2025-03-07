@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import { resolve } from 'path';
 
 export default defineConfig({
     plugins: [
@@ -17,6 +18,12 @@ export default defineConfig({
             },
         }),
     ],
+    resolve: {
+        alias: {
+            // ランタイムコンパイラを含むVueビルドを使用するためのエイリアス
+            'vue': 'vue/dist/vue.esm-bundler.js',
+        },
+    },
     server: {
         host: '0.0.0.0',
         port: 3000,

@@ -4,21 +4,33 @@ use App\Http\Controllers\Auth\GuestLoginController;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Api\CategoryApiController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
+/**
+ * 認証ルートの読み込み
+ */
 require __DIR__ . "/auth.php";
 
+/**
+ * ホームページリダイレクト
+ */
 Route::get("/", function () {
     return redirect()->route("todos.index");
 })->name("home");
 
-// 簡単ログイン
+/**
+ * ゲストログイン機能
+ */
 Route::get("/guest-login", [GuestLoginController::class, "login"])
     ->middleware("guest")
     ->name("guest.login");
 
-// In routes/web.php
+/**
+ * カテゴリーデバッグ用エンドポイント
+ */
 Route::get("/debug-categories", function () {
     try {
         if (!Auth::check()) {
@@ -51,74 +63,89 @@ Route::get("/debug-categories", function () {
         ];
     }
 });
-// In routes/web.php
-Route::get("/api/web-categories", [
-    App\Http\Controllers\Api\CategoryApiController::class,
-    "index",
-]);
 
+/**
+ * Web用カテゴリーAPI
+ */
+Route::get("/api/web-categories", [CategoryApiController::class, "index"]);
+
+/**
+ * Todoアプリメインページ
+ */
 Route::get("/todos", [TodoController::class, "index"])->name("todos.index");
 
+/**
+ * ダッシュボードリダイレクト
+ */
 Route::get("/dashboard", function () {
     return redirect()->route("todos.index", ["view" => "today"]);
 })
     ->middleware(["auth"])
     ->name("dashboard");
 
+/**
+ * 認証が必要なルートグループ
+ */
 Route::middleware(["auth"])->group(function () {
-    Route::get("/todos/trash", [TodoController::class, "trashed"])->name(
-        "todos.trashed"
-    );
-    Route::delete("/todos/trash/empty", [
-        TodoController::class,
-        "emptyTrash",
-    ])->name("todos.trash.empty"); // 新規追加：ゴミ箱を空にする機能
-    Route::post("/todos", [TodoController::class, "store"])->name(
-        "todos.store"
-    );
-    Route::put("/todos/{todo}", [TodoController::class, "update"])->name(
-        "todos.update"
-    );
-    Route::patch("/todos/{todo}/toggle", [
-        TodoController::class,
-        "toggle",
-    ])->name("todos.toggle");
-    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])->name(
-        "todos.trash"
-    );
-    Route::patch("/todos/{todo}/restore", [
-        TodoController::class,
-        "restore",
-    ])->name("todos.restore"); // 新規追加：ゴミ箱からタスクを復元
-    Route::delete("/todos/{todo}", [TodoController::class, "destroy"])->name(
-        "todos.destroy"
-    );
+    /**
+     * Todoルート
+     */
+    // ゴミ箱関連
+    Route::get("/todos/trash", [TodoController::class, "trashed"])
+        ->name("todos.trashed");
 
-    Route::get("/categories", [CategoryController::class, "index"])->name(
-        "categories.index"
-    );
-    Route::post("/categories", [CategoryController::class, "store"])->name(
-        "categories.store"
-    );
-    Route::put("/categories/{category}", [
-        CategoryController::class,
-        "update",
-    ])->name("categories.update");
-    Route::delete("/categories/{category}", [
-        CategoryController::class,
-        "destroy",
-    ])->name("categories.destroy");
+    Route::delete("/todos/trash/empty", [TodoController::class, "emptyTrash"])
+        ->name("todos.trash.empty");
 
-    Route::get("/profile", [ProfileController::class, "edit"])->name(
-        "profile.edit"
-    );
-    Route::patch("/profile", [ProfileController::class, "update"])->name(
-        "profile.update"
-    );
-    Route::delete("/profile", [ProfileController::class, "destroy"])->name(
-        "profile.destroy"
-    );
-    // routes/web.php に追加
+    // タスク操作
+    Route::post("/todos", [TodoController::class, "store"])
+        ->name("todos.store");
+
+    Route::put("/todos/{todo}", [TodoController::class, "update"])
+        ->name("todos.update");
+
+    Route::patch("/todos/{todo}/toggle", [TodoController::class, "toggle"])
+        ->name("todos.toggle");
+
+    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])
+        ->name("todos.trash");
+
+    Route::patch("/todos/{todo}/restore", [TodoController::class, "restore"])
+        ->name("todos.restore");
+
+    Route::delete("/todos/{todo}", [TodoController::class, "destroy"])
+        ->name("todos.destroy");
+
+    /**
+     * カテゴリールート
+     */
+    Route::get("/categories", [CategoryController::class, "index"])
+        ->name("categories.index");
+
+    Route::post("/categories", [CategoryController::class, "store"])
+        ->name("categories.store");
+
+    Route::put("/categories/{category}", [CategoryController::class, "update"])
+        ->name("categories.update");
+
+    Route::delete("/categories/{category}", [CategoryController::class, "destroy"])
+        ->name("categories.destroy");
+
+    /**
+     * プロフィールルート
+     */
+    Route::get("/profile", [ProfileController::class, "edit"])
+        ->name("profile.edit");
+
+    Route::patch("/profile", [ProfileController::class, "update"])
+        ->name("profile.update");
+
+    Route::delete("/profile", [ProfileController::class, "destroy"])
+        ->name("profile.destroy");
+
+    /**
+     * メモリスト部分ビュー取得API
+     */
     Route::get("/api/memos-partial", function () {
         $memos = Auth::user()
             ->todos()
@@ -130,8 +157,10 @@ Route::middleware(["auth"])->group(function () {
 
         return view("layouts.partials.memo-list", compact("memos"));
     });
-    Route::post("/api/categories", [
-        App\Http\Controllers\Api\CategoryApiController::class,
-        "store",
-    ])->name("api.categories.store");
+
+    /**
+     * カテゴリーAPI
+     */
+    Route::post("/api/categories", [CategoryApiController::class, "store"])
+        ->name("api.categories.store");
 });
