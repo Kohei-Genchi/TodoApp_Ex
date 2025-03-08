@@ -10,6 +10,17 @@ class Todo extends Model
 {
     use HasFactory;
 
+    // 状態定数
+    const STATUS_PENDING = 'pending';
+    const STATUS_COMPLETED = 'completed';
+    const STATUS_TRASHED = 'trashed';
+
+    // 場所定数
+    const LOCATION_INBOX = 'INBOX';
+    const LOCATION_TODAY = 'TODAY';
+    const LOCATION_SCHEDULED = 'SCHEDULED';
+    const LOCATION_TEMPLATE = 'TEMPLATE';
+
     protected $fillable = [
         'title',
         'description',

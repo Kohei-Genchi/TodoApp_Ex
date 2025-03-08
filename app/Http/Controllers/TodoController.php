@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\TodoRequest;
+use App\Http\Requests\TodoUpdateRequest;
 use App\Models\Todo;
 use App\Models\Category;
 use App\Traits\HandlesApiResponses;
@@ -10,7 +11,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
 class TodoController extends Controller
@@ -38,19 +38,15 @@ class TodoController extends Controller
             try {
                 // 未認証の場合は空配列を返す
                 if (!Auth::check()) {
-                    Log::info('未認証アクセス - 空データを返します');
-                    // Return direct array for frontend compatibility
                     return response()->json([]);
                 }
 
                 // ユーザーのカテゴリを取得
                 $user = Auth::user();
                 $categories = Category::where('user_id', $user->id)->orderBy('name')->get();
-                // Return direct array for frontend compatibility
                 return response()->json($categories);
             } catch (\Exception $e) {
-                Log::error("カテゴリ取得エラー: {$e->getMessage()}");
-                return $this->errorResponse("データ取得エラー: {$e->getMessage()}");
+                return $this->errorResponse("データ取得エラ-");
             }
         }
 
@@ -86,8 +82,7 @@ class TodoController extends Controller
             // レスポンス
             return $this->handleResponse($request, $todo, 'タスクを追加しました', 201);
         } catch (\Exception $e) {
-            Log::error("タスク作成エラー: {$e->getMessage()}");
-            return $this->handleError($request, "タスク作成エラー: {$e->getMessage()}");
+            return $this->handleError($request, "タスク作成エラー");
         }
     }
 
@@ -107,19 +102,18 @@ class TodoController extends Controller
             }
 
             // ゴミ箱にないタスクは復元できない
-            if ($todo->status !== 'trashed') {
+            if ($todo->status !== Todo::STATUS_TRASHED) {
                 return $this->handleError($request, 'ゴミ箱にあるタスクのみ復元できます', 400);
             }
 
             // タスクの復元先を決定
-            $this->determineTaskLocation($todo);
-            $todo->status = 'pending';
+            $this->handleTaskLocation($todo);
+            $todo->status = Todo::STATUS_PENDING;
             $todo->save();
 
             return $this->handleResponse($request, $todo->fresh(), 'タスクを復元しました');
         } catch (\Exception $e) {
-            Log::error("タスク復元エラー: {$e->getMessage()}");
-            return $this->handleError($request, "タスク復元エラー: {$e->getMessage()}");
+            return $this->handleError($request, "タスク復元エラー");
         }
     }
 
@@ -139,13 +133,14 @@ class TodoController extends Controller
             }
 
             // 完了状態の切り替え
-            $todo->status = $todo->status === 'completed' ? 'pending' : 'completed';
+            $todo->status = $todo->status === Todo::STATUS_COMPLETED
+                ? Todo::STATUS_PENDING
+                : Todo::STATUS_COMPLETED;
             $todo->save();
 
             return $this->handleResponse($request, $todo->fresh(), 'タスクのステータスを更新しました');
         } catch (\Exception $e) {
-            Log::error("タスク状態切替エラー: {$e->getMessage()}");
-            return $this->handleError($request, "タスク状態切替エラー: {$e->getMessage()}");
+            return $this->handleError($request, "タスク状態切替エラー");
         }
     }
 
@@ -164,13 +159,12 @@ class TodoController extends Controller
                 return $this->handleUnauthenticated($request);
             }
 
-            $todo->status = 'trashed';
+            $todo->status = Todo::STATUS_TRASHED;
             $todo->save();
 
             return $this->handleResponse($request, null, 'タスクをゴミ箱に移動しました');
         } catch (\Exception $e) {
-            Log::error("ゴミ箱移動エラー: {$e->getMessage()}");
-            return $this->handleError($request, "ゴミ箱移動エラー: {$e->getMessage()}");
+            return $this->handleError($request, "ゴミ箱移動エラー");
         }
     }
 
@@ -205,8 +199,7 @@ class TodoController extends Controller
 
             return $this->handleResponse($request, null, 'タスクを完全に削除しました');
         } catch (\Exception $e) {
-            Log::error("タスク削除エラー: {$e->getMessage()}");
-            return $this->handleError($request, "タスク削除エラー: {$e->getMessage()}");
+            return $this->handleError($request, "タスク削除エラー");
         }
     }
 
@@ -225,12 +218,13 @@ class TodoController extends Controller
             }
 
             // ゴミ箱内のタスクをすべて削除
-            Todo::where('user_id', Auth::id())->where('status', 'trashed')->delete();
+            Todo::where('user_id', Auth::id())
+                ->where('status', Todo::STATUS_TRASHED)
+                ->delete();
 
             return $this->handleResponse($request, null, 'ゴミ箱を空にしました');
         } catch (\Exception $e) {
-            Log::error("ゴミ箱を空にする処理エラー: {$e->getMessage()}");
-            return $this->handleError($request, "ゴミ箱を空にできませんでした: {$e->getMessage()}");
+            return $this->handleError($request, "ゴミ箱を空にできませんでした");
         }
     }
 
@@ -261,22 +255,20 @@ class TodoController extends Controller
             // タスク取得
             $todos = $query->orderBy('created_at', 'desc')->get();
 
-            // Return direct array for frontend compatibility
             return response()->json($todos);
         } catch (\Exception $e) {
-            Log::error("タスク一覧取得エラー: {$e->getMessage()}");
-            return response()->json(['error' => "タスク一覧取得エラー: {$e->getMessage()}"], 500);
+            return response()->json(['error' => "タスク一覧取得エラー"], 500);
         }
     }
 
     /**
      * タスクの更新
      *
-     * @param Request $request リクエスト
+     * @param TodoUpdateRequest $request リクエスト
      * @param Todo $todo 対象タスク
      * @return JsonResponse 更新結果を含むJSONレスポンス
      */
-    public function update(Request $request, Todo $todo): JsonResponse
+    public function update(TodoUpdateRequest $request, Todo $todo): JsonResponse
     {
         try {
             // 未認証の場合
@@ -289,42 +281,24 @@ class TodoController extends Controller
                 return response()->json(['error' => 'このタスクを編集する権限がありません'], 403);
             }
 
-            // リクエストの検証
-            $validated = $request->validate([
-                'title' => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'category_id' => 'nullable|exists:categories,id',
-                'due_date' => 'nullable|date',
-                'due_time' => 'nullable|string',
-                'recurrence_type' => 'nullable|in:none,daily,weekly,monthly',
-                'recurrence_end_date' => 'nullable|date|after_or_equal:due_date',
-            ]);
-
             // タスクの更新
-            $todo->update($validated);
+            $todo->update($request->validated());
             $todo->refresh();
 
             // 日付が変更された場合、locationを再計算
-            if (isset($validated['due_date'])) {
-                // 日付を Carbon インスタンスに変換して比較
-                $dueDate = now()->parse($validated['due_date'])->startOfDay();
-                $today = now()->startOfDay();
-
-                // locationを更新
-                $todo->location = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
+            if ($request->has('due_date')) {
+                $this->handleTaskLocation($todo);
                 $todo->save();
             }
 
             $todo->load('category');
 
-            // Return direct array for frontend compatibility
             return response()->json([
                 'message' => 'タスクを更新しました',
                 'todo' => $todo
             ]);
         } catch (\Exception $e) {
-            Log::error("タスク更新エラー: {$e->getMessage()}");
-            return response()->json(['error' => "更新に失敗しました: {$e->getMessage()}"], 500);
+            return response()->json(['error' => "更新に失敗しました"], 500);
         }
     }
 
@@ -340,7 +314,6 @@ class TodoController extends Controller
             // 未認証の場合
             if (!Auth::check()) {
                 if (request()->expectsJson()) {
-                    // Return direct array for frontend compatibility
                     return response()->json([]);
                 }
                 return redirect()->route('login');
@@ -357,18 +330,16 @@ class TodoController extends Controller
             // APIリクエストの場合
             if (request()->expectsJson()) {
                 $todo->load('category');
-                // Return direct array for frontend compatibility
                 return response()->json($todo);
             }
 
             // Webリクエストの場合
             return view('todos.show', compact('todo'));
         } catch (\Exception $e) {
-            Log::error("タスク表示エラー: {$e->getMessage()}");
             if (request()->expectsJson()) {
-                return response()->json(['error' => "タスク表示エラー: {$e->getMessage()}"], 500);
+                return response()->json(['error' => "タスク表示エラー"], 500);
             }
-            return back()->with('error', "タスク表示エラー: {$e->getMessage()}");
+            return back()->with('error', "タスク表示エラー");
         }
     }
 
@@ -382,21 +353,18 @@ class TodoController extends Controller
         try {
             // 未認証の場合は空配列を返す
             if (!Auth::check()) {
-                // Return direct array for frontend compatibility
                 return response()->json([]);
             }
 
             // ゴミ箱内のタスクを取得
             $trashedTasks = Todo::where('user_id', Auth::id())
                 ->with('category')
-                ->where('status', 'trashed')
+                ->where('status', Todo::STATUS_TRASHED)
                 ->get();
 
-            // Return direct array for frontend compatibility
             return response()->json($trashedTasks);
         } catch (\Exception $e) {
-            Log::error("ゴミ箱内タスク取得エラー: {$e->getMessage()}");
-            return response()->json(['error' => "ゴミ箱内タスク取得エラー: {$e->getMessage()}"], 500);
+            return response()->json(['error' => "ゴミ箱内タスク取得エラー"], 500);
         }
     }
 
@@ -431,9 +399,12 @@ class TodoController extends Controller
         foreach ($dates as $date) {
             $newTaskData = $taskData;
             $newTaskData['due_date'] = $date->format('Y-m-d');
+
             // 日付を比較して場所を決定
             $today = now()->startOfDay();
-            $newTaskData['location'] = $date->startOfDay()->equalTo($today) ? 'TODAY' : 'SCHEDULED';
+            $newTaskData['location'] = $date->startOfDay()->equalTo($today)
+                ? Todo::LOCATION_TODAY
+                : Todo::LOCATION_SCHEDULED;
 
             // 繰り返し情報は不要なので削除
             unset($newTaskData['recurrence_type'], $newTaskData['recurrence_end_date']);
@@ -525,9 +496,11 @@ class TodoController extends Controller
             $dueDate = now()->parse($taskData['due_date'])->startOfDay();
             $today = now()->startOfDay();
 
-            $taskData['location'] = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
+            $taskData['location'] = $dueDate->equalTo($today)
+                ? Todo::LOCATION_TODAY
+                : Todo::LOCATION_SCHEDULED;
         } else {
-            $taskData['location'] = 'INBOX';
+            $taskData['location'] = Todo::LOCATION_INBOX;
             $taskData['due_date'] = null;
             $taskData['due_time'] = null;
         }
@@ -547,25 +520,6 @@ class TodoController extends Controller
     }
 
     /**
-     * タスクの復元先を決定
-     *
-     * @param Todo $todo 対象タスク
-     * @return void
-     */
-    private function determineTaskLocation(Todo $todo): void
-    {
-        if ($todo->due_date) {
-            // 日付を Carbon インスタンスに変換して比較
-            $dueDate = $todo->due_date->startOfDay();
-            $today = now()->startOfDay();
-
-            $todo->location = $dueDate->equalTo($today) ? 'TODAY' : 'SCHEDULED';
-        } else {
-            $todo->location = 'INBOX';
-        }
-    }
-
-    /**
      * ベースタスククエリを構築
      *
      * @return \Illuminate\Database\Eloquent\Builder クエリビルダ
@@ -574,7 +528,7 @@ class TodoController extends Controller
     {
         return Todo::where('user_id', Auth::id())
             ->with('category')
-            ->where('status', '!=', 'trashed');
+            ->where('status', '!=', Todo::STATUS_TRASHED);
     }
 
     /**
@@ -595,10 +549,10 @@ class TodoController extends Controller
             case 'scheduled':
                 $query->whereNotNull('due_date')
                     ->whereDate('due_date', '>', now()->format('Y-m-d'))
-                    ->where('status', 'pending');
+                    ->where('status', Todo::STATUS_PENDING);
                 break;
             case 'inbox':
-                $query->whereNull('due_date')->where('status', 'pending');
+                $query->whereNull('due_date')->where('status', Todo::STATUS_PENDING);
                 break;
             case 'calendar':
                 $query->whereBetween('due_date', [

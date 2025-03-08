@@ -29,7 +29,7 @@ services:
         networks:
             - app-network
         command: ["/bin/bash", "/scheduler.sh"]
-
+        #  @Todo
     mailhog:
         image: jcalonso/mailhog:latest
         ports:

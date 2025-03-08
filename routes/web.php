@@ -5,6 +5,7 @@ use App\Http\Controllers\TodoController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Api\CategoryApiController;
+use App\Models\Todo;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,8 @@ Route::get("/guest-login", [GuestLoginController::class, "login"])
     ->middleware("guest")
     ->name("guest.login");
 
+
+    // @Todo delete debug code
 /**
  * カテゴリーデバッグ用エンドポイント
  */
@@ -63,7 +66,7 @@ Route::get("/debug-categories", function () {
         ];
     }
 });
-
+// @Todo web.php内で良い?
 /**
  * Web用カテゴリーAPI
  */
@@ -131,6 +134,7 @@ Route::middleware(["auth"])->group(function () {
     Route::delete("/categories/{category}", [CategoryController::class, "destroy"])
         ->name("categories.destroy");
 
+        // @Todo Profileへのリンクを作る。→UserNameにリンクをつける。ログアウト機能はProfileへ
     /**
      * プロフィールルート
      */
@@ -143,6 +147,8 @@ Route::middleware(["auth"])->group(function () {
     Route::delete("/profile", [ProfileController::class, "destroy"])
         ->name("profile.destroy");
 
+
+        // @Todo apiなのにweb.php内で良い?
     /**
      * メモリスト部分ビュー取得API
      */
@@ -157,6 +163,7 @@ Route::middleware(["auth"])->group(function () {
 
         return view("layouts.partials.memo-list", compact("memos"));
     });
+
 
     /**
      * カテゴリーAPI

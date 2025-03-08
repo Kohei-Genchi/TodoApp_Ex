@@ -13,6 +13,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use \Illuminate\Support\Facades\DB;
+
 
 class CategoryApiController extends Controller
 {
@@ -48,7 +50,7 @@ public function index(): JsonResponse
         Log::info('Category query:', [$queryLog, $bindings]);
 
         // Manual DB query to double-check
-        $rawCategories = \DB::select("SELECT * FROM categories WHERE user_id = ?", [$user->id]);
+        $rawCategories = DB::select("SELECT * FROM categories WHERE user_id = ?", [$user->id]);
         Log::info('Raw DB query found ' . count($rawCategories) . ' categories for user ' . $user->id);
 
         // Log the fetched categories

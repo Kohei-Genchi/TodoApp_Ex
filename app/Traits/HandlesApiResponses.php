@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\Todo;
 use Illuminate\Http\JsonResponse;
 
 trait HandlesApiResponses
@@ -27,5 +28,23 @@ trait HandlesApiResponses
             'success' => false,
             'message' => $message,
         ], $code);
+    }
+
+    /**
+     * タスクの場所（location）を設定
+     *
+     * @param Todo $todo 対象タスク
+     * @return void
+     */
+    protected function handleTaskLocation(Todo $todo): void
+    {
+        if (!$todo->due_date) {
+            $todo->location = Todo::LOCATION_INBOX;
+            return;
+        }
+
+        $todo->location = $todo->due_date->isToday()
+            ? Todo::LOCATION_TODAY
+            : Todo::LOCATION_SCHEDULED;
     }
 }

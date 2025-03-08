@@ -25,8 +25,7 @@ Route::middleware("auth:sanctum")->get("/user", function (Request $request) {
 
 /**
  * Todo API ルート
- *
- * 現在は auth:sanctum ではなく web ミドルウェアを使用
+ * @Todo why 現在は auth:sanctum ではなく web ミドルウェアを使用
  */
 Route::prefix("todos")
     ->middleware(["web"])
