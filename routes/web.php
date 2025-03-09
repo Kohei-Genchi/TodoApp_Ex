@@ -9,6 +9,9 @@ use App\Models\Todo;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Auth\GoogleController;
+
+
 
 /**
  * 認証ルートの読み込み
@@ -22,6 +25,9 @@ Route::get("/", function () {
     return redirect()->route("todos.index");
 })->name("home");
 
+
+Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
+Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
 /**
  * ゲストログイン機能
  */
