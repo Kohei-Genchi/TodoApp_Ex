@@ -42,13 +42,13 @@ Route::get("/debug-categories", function () {
 
         $user = Auth::user();
 
-        // Direct DB query
+        // 直接DBクエリ
         $rawCategories = DB::select(
             "SELECT * FROM categories WHERE user_id = ?",
             [$user->id]
         );
 
-        // Eloquent query
+        // Eloquentクエリ
         $categories = $user->categories()->get();
 
         return [

@@ -1,5 +1,4 @@
-// resources/js/app.js
-// Fix for initialization and window.editTodo function
+// Vueアプリ初期化とグローバル編集関数設定
 
 import './bootstrap';
 
@@ -10,16 +9,16 @@ import TodoApp from './components/TodoApp.vue';
 window.Alpine = Alpine;
 Alpine.start();
 
-// Initialize Vue app if the todo-app element exists
+// Vueアプリを初期化（todo-app要素が存在する場合）
 if (document.getElementById('todo-app')) {
     const app = createApp(TodoApp);
     const vm = app.mount('#todo-app');
 
-    // Create a global function for editing todos from outside Vue components
+    // Vueコンポーネント外からタスク編集するためのグローバル関数定義
     window.editTodo = function(taskIdOrData, todoData = null) {
         console.log('Global editTodo called with:', taskIdOrData, todoData);
 
-        // Handle when todoData is passed as a second parameter (from HTML data attributes)
+        // HTMLデータ属性からtodoDataが渡された場合の処理
         if (todoData && typeof todoData === 'object') {
             console.log('Using todoData from second parameter:', todoData);
 
@@ -68,14 +67,14 @@ if (document.getElementById('todo-app')) {
 
             // Use object data if provided
             if (typeof taskIdOrData === 'object' && taskIdOrData !== null) {
-                // Try to directly call the openEditTaskModal function if available
+                // openEditTaskModal関数が利用可能な場合の直接呼び出し
                 if (vm && typeof vm.openEditTaskModal === 'function') {
                     console.log('Directly calling openEditTaskModal with object:', taskIdOrData);
                     vm.openEditTaskModal(taskIdOrData);
                     return;
                 }
 
-                // Fallback to event dispatch
+                // イベントディスパッチによるフォールバック処理
                 const detail = taskIdOrData.id ?
                     { id: Number(taskIdOrData.id), data: taskIdOrData } :
                     { id: null, data: taskIdOrData };
@@ -94,9 +93,9 @@ if (document.getElementById('todo-app')) {
     };
 }
 
-// Legacy listeners for buttons outside Vue components
+// Vueコンポーネント外のボタン用イベントリスナー
 document.addEventListener('DOMContentLoaded', function() {
-    // Add the click handlers for "edit" buttons within legacy HTML
+    // 従来のHTML内の編集ボタンクリックハンドラー追加
     const editButtons = document.querySelectorAll('.edit-task-btn');
 
     if (editButtons.length > 0) {

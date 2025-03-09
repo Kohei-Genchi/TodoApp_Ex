@@ -45,8 +45,7 @@ public function toMail(object $notifiable): MailMessage
     $mailMessage = new MailMessage;
     $mailMessage->subject('Todo Task Reminder')
                 ->greeting("Hi {$notifiable->name}!")
-                ->line($this->message)
-                ->line("本日{$this->todosCount}件のタスクが残っていますね.");
+                ->line($this->message);
 
     // Add list of tasks if there are any
     if ($this->todosCount > 0) {

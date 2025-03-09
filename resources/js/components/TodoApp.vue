@@ -156,7 +156,7 @@ export default {
 
     /**
      * 日付を比較用にフォーマット
-     * @param {string|Date} dateString 日付文字列またはDateオブジェクト
+     * @param {string|Date} dateString - 日付文字列またはDateオブジェクト
      * @returns {string} YYYY-MM-DD形式の日付文字列
      */
     function formatDateForComparison(dateString) {
@@ -341,9 +341,6 @@ export default {
       }
     }
 
-    /**
-     * カテゴリ一覧を読み込む
-     */
     async function loadCategories() {
       try {
         const response = await CategoryApi.getCategories();
