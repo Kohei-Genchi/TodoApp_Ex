@@ -37,8 +37,9 @@ resources/views/todos/partials/task-modal.blade.php
 
                     <!-- Enhanced Category Selection with Inline Creation -->
                     <div id="category-section">
+
                         <div class="flex justify-between items-center mb-1">
-                            <label for="category_id" class="block text-sm font-medium text-gray-700">カテゴリー</label>
+                            <label for="new-category-button" class="block text-sm font-medium text-gray-700">カテゴリー</label>
                             <button type="button" id="new-category-button"
                                     class="text-xs text-blue-600 hover:text-blue-800 focus:outline-none">
                                 新しいカテゴリー

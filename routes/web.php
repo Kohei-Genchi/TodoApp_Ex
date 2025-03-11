@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Auth\GoogleController;
-
-
+use App\Http\Controllers\StripSubscriptionController;
 
 /**
  * 認証ルートの読み込み
@@ -25,9 +24,42 @@ Route::get("/", function () {
     return redirect()->route("todos.index");
 })->name("home");
 
+//Google ログイン
+Route::get("/auth/google", [GoogleController::class, "redirectToGoogle"]);
+Route::get("/auth/google/callback", [
+    GoogleController::class,
+    "handleGoogleCallback",
+]);
 
-Route::get('/auth/google', [GoogleController::class, 'redirectToGoogle']);
-Route::get('/auth/google/callback', [GoogleController::class, 'handleGoogleCallback']);
+# サブスク申請ページ(チェックアウトに進む前のページ)
+Route::get("stripe/subscription", [
+    StripSubscriptionController::class,
+    "index",
+])->name("stripe.subscription");
+
+# チェックアウトページ
+Route::get("stripe/subscription/checkout", [
+    StripSubscriptionController::class,
+    "checkout",
+])->name("stripe.subscription.checkout");
+
+# 決済完了ウェブホック
+Route::post("stripe/subscription/webhook", [
+    StripSubscriptionController::class,
+    "webhook",
+]);
+
+# 支払い完了
+Route::get("stripe/subscription/comp", [
+    StripSubscriptionController::class,
+    "comp",
+])->name("stripe.subscription.comp");
+
+# カスタマーポータル
+Route::get("stripe/subscription/customer_portal", [
+    StripSubscriptionController::class,
+    "customer_portal",
+])->name("stripe.subscription.customer_portal");
 /**
  * ゲストログイン機能
  */
@@ -35,8 +67,7 @@ Route::get("/guest-login", [GuestLoginController::class, "login"])
     ->middleware("guest")
     ->name("guest.login");
 
-
-    // @Todo delete debug code
+// @Todo delete debug code
 /**
  * カテゴリーデバッグ用エンドポイント
  */
@@ -100,61 +131,80 @@ Route::middleware(["auth"])->group(function () {
      * Todoルート
      */
     // ゴミ箱関連
-    Route::get("/todos/trash", [TodoController::class, "trashed"])
-        ->name("todos.trashed");
+    Route::get("/todos/trash", [TodoController::class, "trashed"])->name(
+        "todos.trashed"
+    );
 
-    Route::delete("/todos/trash/empty", [TodoController::class, "emptyTrash"])
-        ->name("todos.trash.empty");
+    Route::delete("/todos/trash/empty", [
+        TodoController::class,
+        "emptyTrash",
+    ])->name("todos.trash.empty");
 
     // タスク操作
-    Route::post("/todos", [TodoController::class, "store"])
-        ->name("todos.store");
+    Route::post("/todos", [TodoController::class, "store"])->name(
+        "todos.store"
+    );
 
-    Route::put("/todos/{todo}", [TodoController::class, "update"])
-        ->name("todos.update");
+    Route::put("/todos/{todo}", [TodoController::class, "update"])->name(
+        "todos.update"
+    );
 
-    Route::patch("/todos/{todo}/toggle", [TodoController::class, "toggle"])
-        ->name("todos.toggle");
+    Route::patch("/todos/{todo}/toggle", [
+        TodoController::class,
+        "toggle",
+    ])->name("todos.toggle");
 
-    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])
-        ->name("todos.trash");
+    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])->name(
+        "todos.trash"
+    );
 
-    Route::patch("/todos/{todo}/restore", [TodoController::class, "restore"])
-        ->name("todos.restore");
+    Route::patch("/todos/{todo}/restore", [
+        TodoController::class,
+        "restore",
+    ])->name("todos.restore");
 
-    Route::delete("/todos/{todo}", [TodoController::class, "destroy"])
-        ->name("todos.destroy");
+    Route::delete("/todos/{todo}", [TodoController::class, "destroy"])->name(
+        "todos.destroy"
+    );
 
     /**
      * カテゴリールート
      */
-    Route::get("/categories", [CategoryController::class, "index"])
-        ->name("categories.index");
+    Route::get("/categories", [CategoryController::class, "index"])->name(
+        "categories.index"
+    );
 
-    Route::post("/categories", [CategoryController::class, "store"])
-        ->name("categories.store");
+    Route::post("/categories", [CategoryController::class, "store"])->name(
+        "categories.store"
+    );
 
-    Route::put("/categories/{category}", [CategoryController::class, "update"])
-        ->name("categories.update");
+    Route::put("/categories/{category}", [
+        CategoryController::class,
+        "update",
+    ])->name("categories.update");
 
-    Route::delete("/categories/{category}", [CategoryController::class, "destroy"])
-        ->name("categories.destroy");
+    Route::delete("/categories/{category}", [
+        CategoryController::class,
+        "destroy",
+    ])->name("categories.destroy");
 
-        // @Todo Profileへのリンクを作る。→UserNameにリンクをつける。ログアウト機能はProfileへ
+    // @Todo Profileへのリンクを作る。→UserNameにリンクをつける。ログアウト機能はProfileへ
     /**
      * プロフィールルート
      */
-    Route::get("/profile", [ProfileController::class, "edit"])
-        ->name("profile.edit");
+    Route::get("/profile", [ProfileController::class, "edit"])->name(
+        "profile.edit"
+    );
 
-    Route::patch("/profile", [ProfileController::class, "update"])
-        ->name("profile.update");
+    Route::patch("/profile", [ProfileController::class, "update"])->name(
+        "profile.update"
+    );
 
-    Route::delete("/profile", [ProfileController::class, "destroy"])
-        ->name("profile.destroy");
+    Route::delete("/profile", [ProfileController::class, "destroy"])->name(
+        "profile.destroy"
+    );
 
-
-        // @Todo apiなのにweb.php内で良い?
+    // @Todo apiなのにweb.php内で良い?
     /**
      * メモリスト部分ビュー取得API
      */
@@ -170,10 +220,11 @@ Route::middleware(["auth"])->group(function () {
         return view("layouts.partials.memo-list", compact("memos"));
     });
 
-
     /**
      * カテゴリーAPI
      */
-    Route::post("/api/categories", [CategoryApiController::class, "store"])
-        ->name("api.categories.store");
+    Route::post("/api/categories", [
+        CategoryApiController::class,
+        "store",
+    ])->name("api.categories.store");
 });
