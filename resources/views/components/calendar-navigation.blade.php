@@ -1,4 +1,4 @@
-{{-- <!-- resources/views/components/calendar-navigation.blade.php -->
+<!-- {{-- <!-- resources/views/components/calendar-navigation.blade.php -->
 @props(['currentView' => 'day', 'date' => null])
 
 @php
@@ -108,8 +108,13 @@
 
         // Close dropdown when clicking outside
         document.addEventListener('click', function(e) {
-            if (!calendarSelector?.contains(e.target) && !calendarDropdown?.contains(e.target)) {
-                calendarDropdown?.classList.add('hidden');
+            const calendarSelector = document.getElementById('calendar-selector'); // Update this selector to match your actual element ID
+            const calendarDropdown = document.getElementById('calendar-dropdown'); // Update this selector to match your actual element ID
+
+            if (calendarSelector && calendarDropdown &&
+                !calendarSelector.contains(e.target) &&
+                !calendarDropdown.contains(e.target)) {
+                calendarDropdown.classList.add('hidden');
             }
         });
 
@@ -138,4 +143,4 @@
         });
     });
 </script>
-@endpush --}}
+@endpush --}} -->

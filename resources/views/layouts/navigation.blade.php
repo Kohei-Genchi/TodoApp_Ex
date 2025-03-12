@@ -187,12 +187,14 @@
 
             // Close dropdown when clicking outside
             document.addEventListener('click', function(event) {
-                const dropdown = document.getElementById('userDropdown');
-                const userMenu = document.querySelector('.relative.mb-6');
+            const userMenu = document.querySelector('.relative.mb-6');
+            const dropdown = document.querySelector('#user-dropdown'); // Update this selector to match your actual dropdown ID
 
-                if (!dropdown.contains(event.target) && !userMenu.contains(event.target)) {
-                    dropdown.classList.add('hidden');
-                }
+            if (dropdown && userMenu &&
+                !dropdown.contains(event.target) &&
+                !userMenu.contains(event.target)) {
+                dropdown.classList.add('hidden');
+            }
             });
 
             // Function to confirm logout
