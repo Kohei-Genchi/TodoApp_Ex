@@ -43,11 +43,9 @@ Route::get("stripe/subscription/checkout", [
     "checkout",
 ])->name("stripe.subscription.checkout");
 
-# 決済完了ウェブホック
-Route::post("stripe/subscription/webhook", [
-    StripSubscriptionController::class,
-    "webhook",
-]);
+Route::post("/stripe/subscription/webhook", function (Request $request) {
+    return response()->json(["message" => "Webhook received"]);
+});
 
 # 支払い完了
 Route::get("stripe/subscription/comp", [
