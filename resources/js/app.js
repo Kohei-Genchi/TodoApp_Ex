@@ -1,4 +1,3 @@
-// In resources/js/app.js
 import "./bootstrap";
 
 // Import Alpine.js
@@ -8,8 +7,7 @@ Alpine.start();
 
 // Import Vue and Vue Router
 import { createApp } from "vue";
-import { createRouter, createWebHistory } from "vue-router";
-import router from "./router"; // Import router configuration
+import router from "./router";
 
 // Import components
 import TodoApp from "./components/TodoApp.vue";
@@ -55,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const event = new CustomEvent("edit-todo", {
                     detail: { id: Number(taskIdOrData), data: todoData },
                 });
-                todoAppElement.dispatchEvent(event);
+                document.dispatchEvent(event);
                 return;
             }
 
@@ -85,7 +83,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         const event = new CustomEvent("edit-todo", {
                             detail: { id, data: null },
                         });
-                        todoAppElement.dispatchEvent(event);
+                        document.dispatchEvent(event);
                         return;
                     }
 
@@ -107,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             : { id: null, data: taskIdOrData };
 
                         const event = new CustomEvent("edit-todo", { detail });
-                        todoAppElement.dispatchEvent(event);
+                        document.dispatchEvent(event);
                         return;
                     }
 
@@ -169,9 +167,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const navElement = document.getElementById("sidebar-nav");
     if (navElement) {
         console.log("Found #sidebar-nav element, mounting Vue sidebar");
-        const sidebarApp = createApp(SidebarNavigation, {
-            currentRoute: window.location.pathname,
-        });
+        const sidebarApp = createApp(SidebarNavigation);
 
         // Use Vue Router with the sidebar app
         sidebarApp.use(router);

@@ -1,7 +1,7 @@
 <template>
-    <div>
-        <!-- User Section (Authenticated) -->
-        <div v-if="user" class="mb-6">
+    <div class="mb-6">
+        <!-- Authenticated User View -->
+        <div v-if="user" class="relative user-dropdown">
             <!-- User Display with Dropdown Toggle -->
             <div
                 class="flex justify-between items-center cursor-pointer p-2 rounded-md hover:bg-gray-700 transition-colors duration-200"
@@ -44,13 +44,14 @@
             <!-- Dropdown Menu -->
             <div
                 v-show="isDropdownOpen"
-                class="mt-2 bg-gray-700 rounded-md shadow-lg z-10 border border-gray-600"
+                class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10 border border-gray-600"
             >
                 <div class="py-1">
                     <!-- Home -->
                     <router-link
                         to="/"
-                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
+                        @click="isDropdownOpen = false"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -70,9 +71,10 @@
                     </router-link>
 
                     <!-- Profile -->
-                    <router-link
-                        to="/profile"
-                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                    <a
+                        href="/profile"
+                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
+                        @click="isDropdownOpen = false"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -89,12 +91,13 @@
                             />
                         </svg>
                         Profile
-                    </router-link>
+                    </a>
 
                     <!-- Subscription -->
-                    <router-link
-                        to="/subscription"
-                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                    <a
+                        href="/stripe/subscription"
+                        class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
+                        @click="isDropdownOpen = false"
                     >
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -117,7 +120,7 @@
                             />
                         </svg>
                         Subscription
-                    </router-link>
+                    </a>
 
                     <!-- Logout -->
                     <button
@@ -145,7 +148,7 @@
         </div>
 
         <!-- Guest Section (Not Authenticated) -->
-        <div v-else class="flex justify-between items-center mb-6">
+        <div v-else class="flex justify-between items-center">
             <span class="font-bold">ゲスト</span>
             <div class="flex space-x-3">
                 <a
@@ -169,6 +172,7 @@
 
 <script>
 import { ref, onMounted, onBeforeUnmount } from "vue";
+import axios from "axios";
 
 export default {
     name: "UserDropdown",
@@ -180,20 +184,46 @@ export default {
         },
     },
 
-    setup() {
+    emits: ["refresh-memos"],
+
+    setup(props, { emit }) {
         const isDropdownOpen = ref(false);
 
         // Method to confirm logout
-        const confirmLogout = () => {
+        const confirmLogout = async () => {
             if (confirm("ログアウトしてもよろしいですか？")) {
-                document.getElementById("logout-form").submit();
+                try {
+                    // Get CSRF token
+                    const csrfToken = document
+                        .querySelector('meta[name="csrf-token"]')
+                        .getAttribute("content");
+
+                    await axios.post(
+                        "/logout",
+                        {},
+                        {
+                            headers: {
+                                "X-CSRF-TOKEN": csrfToken,
+                            },
+                        },
+                    );
+
+                    // Redirect to home
+                    window.location.href = "/";
+                } catch (error) {
+                    console.error("Error during logout:", error);
+                }
             }
         };
 
         // Close dropdown when clicking outside
         const handleClickOutside = (event) => {
             const dropdown = document.querySelector(".user-dropdown");
-            if (dropdown && !dropdown.contains(event.target)) {
+            if (
+                isDropdownOpen.value &&
+                dropdown &&
+                !dropdown.contains(event.target)
+            ) {
                 isDropdownOpen.value = false;
             }
         };

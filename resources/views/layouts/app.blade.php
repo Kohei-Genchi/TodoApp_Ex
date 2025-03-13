@@ -20,18 +20,25 @@
                     'name' => Auth::user()->name,
                     'email' => Auth::user()->email,
                 ] : null,
+                'csrfToken' => csrf_token(),
             ]) !!};
         </script>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-100 flex">
             <!-- Vue Sidebar Navigation -->
             <div id="sidebar-nav"></div>
 
             <!-- Page Content -->
-            <main style="margin-left: 240px;">
+            <main class="flex-1 md:ml-64">
+                <!-- Page Content comes here -->
                 {{ $slot }}
             </main>
         </div>
+
+        <!-- Logout Form - Hidden -->
+        <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
+            @csrf
+        </form>
     </body>
 </html>
