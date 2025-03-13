@@ -1,92 +1,179 @@
+// Import bootstrap for the base setup
 import "./bootstrap";
 
+// Import Alpine.js
+import Alpine from "alpinejs";
+window.Alpine = Alpine;
+Alpine.start();
+
+// Import Vue and components
 import { createApp } from "vue";
-import router from "./router";
-import AppLayout from "./layouts/AppLayout.vue";
-
-// Import custom directive
-import { vTodoApp } from "./directives/todoApp";
-
-// Import existing components
 import TodoApp from "./components/TodoApp.vue";
-import TodoList from "./components/TodoList.vue";
-import TodoCalendar from "./components/TodoCalendar.vue";
-import TaskModal from "./components/TaskModal.vue";
-import DateNavigation from "./components/DateNavigation.vue";
-import MonthNavigation from "./components/MonthNavigation.vue";
-import DeleteConfirmModal from "./components/DeleteConfirmModal.vue";
-import EmptyState from "./components/EmptyState.vue";
-import TaskItem from "./components/TaskItem.vue";
-import TaskStats from "./components/TaskStats.vue";
-import AppHeader from "./components/AppHeader.vue";
-import LegacyTodoAppWrapper from "./components/LegacyTodoAppWrapper.vue";
-
-// Import new navigation components
 import SidebarNavigation from "./components/navigation/SidebarNavigation.vue";
-import UserDropdown from "./components/navigation/UserDropdown.vue";
-import QuickInputSection from "./components/navigation/QuickInputSection.vue";
-import MemoList from "./components/navigation/MemoList.vue";
 
-// Create Vue application
-const app = createApp(AppLayout);
+// Log initialization info for debugging
+console.log("Starting application initialization");
 
-// Use Vue Router
-app.use(router);
+// Wait for DOM to be ready
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("DOM fully loaded");
 
-// Register custom directive
-app.directive("todo-app", vTodoApp);
+    // Mount the Vue app if the target element exists
+    const todoAppElement = document.getElementById("todo-app");
+    if (todoAppElement) {
+        console.log("Found #todo-app element, mounting Vue application");
+        const app = createApp(TodoApp);
+        const vm = app.mount("#todo-app");
+        console.log("Vue app mounted successfully");
 
-// Register components globally to ensure they're available throughout the app
-// Todo components
-app.component("TodoApp", TodoApp);
-app.component("TodoList", TodoList);
-app.component("TodoCalendar", TodoCalendar);
-app.component("TaskModal", TaskModal);
-app.component("DateNavigation", DateNavigation);
-app.component("MonthNavigation", MonthNavigation);
-app.component("DeleteConfirmModal", DeleteConfirmModal);
-app.component("EmptyState", EmptyState);
-app.component("TaskItem", TaskItem);
-app.component("TaskStats", TaskStats);
-app.component("AppHeader", AppHeader);
-app.component("LegacyTodoAppWrapper", LegacyTodoAppWrapper);
+        // Global function to edit a todo from outside Vue
+        window.editTodo = function (taskIdOrData, todoData = null) {
+            console.log("Global editTodo called with:", taskIdOrData, todoData);
 
-// Navigation components
-app.component("SidebarNavigation", SidebarNavigation);
-app.component("UserDropdown", UserDropdown);
-app.component("QuickInputSection", QuickInputSection);
-app.component("MemoList", MemoList);
+            // If todoData is passed as an object (from data attributes)
+            if (todoData && typeof todoData === "object") {
+                console.log("Using todoData from data attributes:", todoData);
 
-// Mount the application
-app.mount("#app");
+                // Try to call the component method directly if available
+                if (vm && typeof vm.openEditTaskModal === "function") {
+                    if (!todoData.id && taskIdOrData) {
+                        todoData.id = Number(taskIdOrData);
+                    }
+                    vm.openEditTaskModal(todoData);
+                    return;
+                }
 
-// Make the router available globally for components outside Vue instance
-window.vueRouter = router;
+                // Fallback to dispatching an event
+                const event = new CustomEvent("edit-todo", {
+                    detail: { id: Number(taskIdOrData), data: todoData },
+                });
+                todoAppElement.dispatchEvent(event);
+                return;
+            }
 
-// Save the original editTodo function if it exists
-const originalEditTodo = window.editTodo;
+            // If only ID is provided
+            if (taskIdOrData !== undefined && taskIdOrData !== null) {
+                try {
+                    // Handle numeric or string IDs
+                    if (
+                        typeof taskIdOrData === "number" ||
+                        (typeof taskIdOrData === "string" &&
+                            !isNaN(parseInt(taskIdOrData)))
+                    ) {
+                        const id = Number(taskIdOrData);
 
-// Provide enhanced editTodo function globally for backward compatibility
-window.editTodo = function (taskIdOrData, todoData = null) {
-    console.log("Global editTodo called:", taskIdOrData, todoData);
+                        // Try direct method call first
+                        if (vm && typeof vm.fetchAndEditTask === "function") {
+                            console.log(
+                                "Calling fetchAndEditTask with ID:",
+                                id,
+                            );
+                            vm.fetchAndEditTask(id);
+                            return;
+                        }
 
-    // Try to use the original function first if it exists
-    if (typeof originalEditTodo === "function") {
-        try {
-            return originalEditTodo(taskIdOrData, todoData);
-        } catch (e) {
-            console.error("Error in original editTodo:", e);
-        }
+                        // Fallback to event
+                        console.log("Dispatching edit-todo event with ID:", id);
+                        const event = new CustomEvent("edit-todo", {
+                            detail: { id, data: null },
+                        });
+                        todoAppElement.dispatchEvent(event);
+                        return;
+                    }
+
+                    // Handle object data
+                    if (
+                        typeof taskIdOrData === "object" &&
+                        taskIdOrData !== null
+                    ) {
+                        if (vm && typeof vm.openEditTaskModal === "function") {
+                            vm.openEditTaskModal(taskIdOrData);
+                            return;
+                        }
+
+                        const detail = taskIdOrData.id
+                            ? {
+                                  id: Number(taskIdOrData.id),
+                                  data: taskIdOrData,
+                              }
+                            : { id: null, data: taskIdOrData };
+
+                        const event = new CustomEvent("edit-todo", { detail });
+                        todoAppElement.dispatchEvent(event);
+                        return;
+                    }
+
+                    console.error("Invalid task data format:", taskIdOrData);
+                } catch (error) {
+                    console.error("Error in editTodo function:", error);
+                    alert("タスクの編集中にエラーが発生しました");
+                }
+            } else {
+                console.error("No task ID or data provided to editTodo");
+            }
+        };
+
+        // Global function to trash a memo
+        window.trashMemo = function (id) {
+            if (!id) {
+                console.error("No memo ID provided to trashMemo");
+                return;
+            }
+
+            console.log("Trashing memo with ID:", id);
+
+            // Create a form and submit it via POST
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = `/todos/${id}/trash`;
+
+            // Add CSRF token
+            const csrfToken = document
+                .querySelector('meta[name="csrf-token"]')
+                .getAttribute("content");
+            if (!csrfToken) {
+                console.error("CSRF token not found!");
+                return;
+            }
+
+            const csrfInput = document.createElement("input");
+            csrfInput.type = "hidden";
+            csrfInput.name = "_token";
+            csrfInput.value = csrfToken;
+            form.appendChild(csrfInput);
+
+            // Add method override for PATCH
+            const methodInput = document.createElement("input");
+            methodInput.type = "hidden";
+            methodInput.name = "_method";
+            methodInput.value = "PATCH";
+            form.appendChild(methodInput);
+
+            // Append form to document and submit
+            document.body.appendChild(form);
+            form.submit();
+        };
+    } else {
+        console.warn("Could not find #todo-app element. Vue app not mounted.");
     }
 
-    // Fallback to event-based approach
-    const event = new CustomEvent("edit-todo", {
-        detail: { id: taskIdOrData, data: todoData },
-    });
-    document.dispatchEvent(event);
-};
+    // Mount the sidebar navigation
+    const navElement = document.getElementById("sidebar-nav");
+    if (navElement) {
+        console.log("Found #sidebar-nav element, mounting Vue sidebar");
+        const sidebarApp = createApp(SidebarNavigation, {
+            currentRoute: window.location.pathname,
+        });
 
-// Listen for popstate events to handle browser back/forward buttons with Vue Router
-window.addEventListener("popstate", () => {
-    router.go(0); // This forces router to re-evaluate the current URL
+        sidebarApp.mount("#sidebar-nav");
+        console.log("Vue sidebar mounted successfully");
+    } else {
+        console.warn(
+            "Could not find #sidebar-nav element. Vue sidebar not mounted.",
+        );
+    }
+
+    // Add a global object to check for script execution
+    window.__vueAppLoaded = true;
+    console.log("==== Application initialization complete ====");
 });

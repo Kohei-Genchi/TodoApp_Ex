@@ -1,3 +1,31 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Vue transition and loading styles */
+[v-cloak] {
+    display: none;
+}
+
+.v-enter-active,
+.v-leave-active {
+    transition: opacity 0.3s ease;
+}
+
+.v-enter-from,
+.v-leave-to {
+    opacity: 0;
+}
+
+/* Fix for sidebar and main content */
+@media (min-width: 768px) {
+    .main-content {
+        margin-left: 240px;
+    }
+}
+
+@media (max-width: 767px) {
+    .main-content {
+        margin-left: 0;
+    }
+}

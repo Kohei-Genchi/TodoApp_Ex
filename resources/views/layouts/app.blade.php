@@ -20,65 +20,18 @@
                     'name' => Auth::user()->name,
                     'email' => Auth::user()->email,
                 ] : null,
-                'csrfToken' => csrf_token(),
-                'apiUrl' => url('/api'),
-                'baseUrl' => url('/'),
-                'currentView' => request()->query('view', 'today'),
-                'currentDate' => request()->query('date', now()->format('Y-m-d'))
             ]) !!};
         </script>
     </head>
     <body class="font-sans antialiased">
-        <!-- Hidden logout form (used by Vue components) -->
-        <form id="logout-form" method="POST" action="{{ route('logout') }}" class="hidden">
-            @csrf
-        </form>
+        <div class="min-h-screen bg-gray-100">
+            <!-- Vue Sidebar Navigation -->
+            <div id="sidebar-nav"></div>
 
-        <!-- Vue App Mount Point -->
-        <div id="app">
-            <!-- Vue will render here -->
+            <!-- Page Content -->
+            <main style="margin-left: 240px;">
+                {{ $slot }}
+            </main>
         </div>
-
-        <!-- Support Scripts for TodoApp -->
-        <script>
-            // Function to handle task editing (for backward compatibility)
-            function editTodo(taskIdOrData, todoData) {
-                // This will be overridden by the implementation in app.js
-                console.log('editTodo called:', taskIdOrData, todoData);
-            }
-
-            // Function to handle trash action
-            function trashMemo(id) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = `/todos/${id}/trash`;
-
-                // Add CSRF token
-                const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_token';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
-
-                // Add method override for PATCH
-                const methodInput = document.createElement('input');
-                methodInput.type = 'hidden';
-                methodInput.name = '_method';
-                methodInput.value = 'PATCH';
-                form.appendChild(methodInput);
-
-                // Submit the form
-                document.body.appendChild(form);
-                form.submit();
-            }
-
-            // Confirmation function for logout
-            function confirmLogout() {
-                if (confirm('ログアウトしてもよろしいですか？')) {
-                    document.getElementById('logout-form').submit();
-                }
-            }
-        </script>
     </body>
 </html>

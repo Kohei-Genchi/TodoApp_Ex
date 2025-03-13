@@ -1,23 +1,16 @@
 <template>
     <div>
-        <!-- Memo List Header -->
         <div class="flex items-center justify-between mb-2">
             <div class="text-xs text-gray-400 uppercase tracking-wider">
                 メモ一覧
             </div>
-            <div
-                v-if="memos.length > 0"
-                class="text-xs bg-gray-600 px-1.5 py-0.5 rounded-full"
-            >
+            <div class="text-xs bg-gray-600 px-1.5 py-0.5 rounded-full">
                 {{ memos.length }}
             </div>
         </div>
 
-        <!-- Memo List Container -->
-        <div
-            class="space-y-1 max-h-96 overflow-y-auto pr-1 custom-scrollbar memo-list-container"
-        >
-            <!-- Empty State -->
+        <div class="space-y-1 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+            <!-- Empty state -->
             <div
                 v-if="memos.length === 0"
                 class="text-xs text-gray-500 text-center py-2"
@@ -25,28 +18,24 @@
                 メモはありません
             </div>
 
-            <!-- Memo Items -->
+            <!-- Memo items -->
             <div
                 v-for="memo in memos"
                 :key="memo.id"
                 class="group bg-gray-700 hover:bg-gray-600 rounded py-1.5 px-2 cursor-pointer transition-colors"
                 :style="{
-                    'border-left': `3px solid ${memo.category ? memo.category.color : '#6B7280'}`,
+                    borderLeft: `3px solid ${memo.category ? memo.category.color : '#6B7280'}`,
                 }"
-                v-todo-app:openEditTaskModal="memo"
-                @click="$emit('edit-memo', memo)"
+                @click="editMemo(memo)"
             >
                 <div class="flex items-center justify-between">
-                    <!-- Memo Title -->
                     <div class="text-sm truncate pr-1">{{ memo.title }}</div>
-
-                    <!-- Trash Button (Visible on Hover) -->
                     <div
                         class="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                     >
                         <button
                             type="button"
-                            @click.stop="$emit('trash-memo', memo.id)"
+                            @click.stop="trashMemo(memo.id)"
                             class="text-gray-400 hover:text-gray-200"
                         >
                             <svg
@@ -66,14 +55,14 @@
                     </div>
                 </div>
 
-                <!-- Category Display (if any) -->
+                <!-- Category display -->
                 <div
                     v-if="memo.category"
                     class="text-xs text-gray-400 mt-0.5 flex items-center"
                 >
                     <span
                         class="w-2 h-2 rounded-full mr-1"
-                        :style="{ 'background-color': memo.category.color }"
+                        :style="{ backgroundColor: memo.category.color }"
                     ></span>
                     {{ memo.category.name }}
                 </div>
@@ -94,6 +83,23 @@ export default {
     },
 
     emits: ["edit-memo", "trash-memo"],
+
+    setup(props, { emit }) {
+        // Edit memo handler
+        const editMemo = (memo) => {
+            emit("edit-memo", memo);
+        };
+
+        // Trash memo handler
+        const trashMemo = (memoId) => {
+            emit("trash-memo", memoId);
+        };
+
+        return {
+            editMemo,
+            trashMemo,
+        };
+    },
 };
 </script>
 
