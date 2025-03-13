@@ -4,62 +4,90 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\TodoController;
 use App\Http\Controllers\Api\CategoryApiController;
+use App\Http\Controllers\Api\MemoApiController;
 use App\Http\Controllers\StripSubscriptionController;
 
 /**
- * ユーザー情報取得API
+ * User info API
  */
 Route::middleware("auth:sanctum")->get("/user", function (Request $request) {
     return $request->user();
 });
 
+/**
+ * Stripe webhook
+ */
 Route::post("/stripe/subscription/webhook", [
     StripSubscriptionController::class,
     "Webhook",
 ]);
 
 /**
- * Todo API ルート
- * @Todo why 現在は auth:sanctum ではなく web ミドルウェアを使用
+ * Todo API routes
  */
 Route::prefix("todos")
     ->middleware(["web"])
     ->group(function () {
-        // タスク一覧取得
+        // Get todos
         Route::get("/", [TodoController::class, "apiIndex"]);
 
-        // タスク作成
+        // Create todo
         Route::post("/", [TodoController::class, "store"]);
 
-        // 個別タスク操作
+        // Trash related
+        Route::get("/trashed", [TodoController::class, "trashedApi"]);
+        Route::delete("/trash/empty", [TodoController::class, "emptyTrash"]);
+
+        // Individual todo operations
         Route::get("/{todo}", [TodoController::class, "show"]);
 
-        // PUT と POST の両方を受け付ける
+        // Accept both PUT and POST
         Route::match(["put", "post"], "/{todo}", [
             TodoController::class,
             "update",
         ]);
 
-        // タスクステータス操作
+        // Status operations
         Route::patch("/{todo}/toggle", [TodoController::class, "toggle"]);
+        Route::patch("/{todo}/trash", [TodoController::class, "trash"]);
+        Route::patch("/{todo}/restore", [TodoController::class, "restore"]);
         Route::delete("/{todo}", [TodoController::class, "destroy"]);
     });
 
 /**
- * カテゴリー API ルート
+ * Category API routes
  */
 Route::prefix("categories")
     ->middleware(["web"])
     ->group(function () {
-        // カテゴリー一覧取得
+        // Get categories
         Route::get("/", [CategoryApiController::class, "index"]);
 
-        // カテゴリー作成
+        // Create category
         Route::post("/", [CategoryApiController::class, "store"]);
 
-        // カテゴリー更新
+        // Update category
         Route::put("/{category}", [CategoryApiController::class, "update"]);
 
-        // カテゴリー削除
+        // Delete category
         Route::delete("/{category}", [CategoryApiController::class, "destroy"]);
+    });
+
+// Add this route for web-categories that TodoApp is trying to access
+Route::get("/web-categories", [CategoryApiController::class, "index"]);
+
+/**
+ * Memo API routes
+ */
+Route::prefix("memos")
+    ->middleware(["web"])
+    ->group(function () {
+        // Get memos
+        Route::get("/", [MemoApiController::class, "index"]);
+
+        // Create memo
+        Route::post("/", [MemoApiController::class, "store"]);
+
+        // Trash memo
+        Route::patch("/{todo}/trash", [MemoApiController::class, "trash"]);
     });

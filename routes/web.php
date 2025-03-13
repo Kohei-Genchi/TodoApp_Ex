@@ -13,31 +13,36 @@ use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\StripSubscriptionController;
 
 /**
- * 認証ルートの読み込み
+ * Authentication routes
  */
 require __DIR__ . "/auth.php";
 
 /**
- * ホームページリダイレクト
+ * Vue.js SPA Route - Catch all routes and let Vue Router handle them
+ * This should be the LAST route in the web.php file
  */
-Route::get("/", function () {
-    return redirect()->route("todos.index");
-})->name("home");
+Route::get("/{any?}", function () {
+    return view("layouts.app");
+})->where(
+    "any",
+    "^(?!api|logout|login|register|password|auth|guest-login|stripe/subscription/webhook|stripe/subscription/checkout|stripe/subscription/comp|stripe/subscription/customer_portal).*"
+);
 
-//Google ログイン
+/**
+ * Guest login functionality
+ */
+Route::get("/guest-login", [GuestLoginController::class, "login"])
+    ->middleware("guest")
+    ->name("guest.login");
+
+// Google login
 Route::get("/auth/google", [GoogleController::class, "redirectToGoogle"]);
 Route::get("/auth/google/callback", [
     GoogleController::class,
     "handleGoogleCallback",
 ]);
 
-# サブスク申請ページ(チェックアウトに進む前のページ)
-Route::get("stripe/subscription", [
-    StripSubscriptionController::class,
-    "index",
-])->name("stripe.subscription");
-
-# チェックアウトページ
+# Stripe checkout related routes
 Route::get("stripe/subscription/checkout", [
     StripSubscriptionController::class,
     "checkout",
@@ -47,88 +52,36 @@ Route::post("/stripe/subscription/webhook", function (Request $request) {
     return response()->json(["message" => "Webhook received"]);
 });
 
-# 支払い完了
+# Payment completion
 Route::get("stripe/subscription/comp", [
     StripSubscriptionController::class,
     "comp",
 ])->name("stripe.subscription.comp");
 
-# カスタマーポータル
+# Customer portal
 Route::get("stripe/subscription/customer_portal", [
     StripSubscriptionController::class,
     "customer_portal",
 ])->name("stripe.subscription.customer_portal");
-/**
- * ゲストログイン機能
- */
-Route::get("/guest-login", [GuestLoginController::class, "login"])
-    ->middleware("guest")
-    ->name("guest.login");
-
-// @Todo delete debug code
-/**
- * カテゴリーデバッグ用エンドポイント
- */
-Route::get("/debug-categories", function () {
-    try {
-        if (!Auth::check()) {
-            return "Not logged in";
-        }
-
-        $user = Auth::user();
-
-        // 直接DBクエリ
-        $rawCategories = DB::select(
-            "SELECT * FROM categories WHERE user_id = ?",
-            [$user->id]
-        );
-
-        // Eloquentクエリ
-        $categories = $user->categories()->get();
-
-        return [
-            "user_id" => $user->id,
-            "raw_categories_count" => count($rawCategories),
-            "raw_categories" => $rawCategories,
-            "eloquent_categories_count" => $categories->count(),
-            "eloquent_categories" => $categories,
-        ];
-    } catch (\Exception $e) {
-        return [
-            "error" => $e->getMessage(),
-            "file" => $e->getFile(),
-            "line" => $e->getLine(),
-        ];
-    }
-});
-// @Todo web.php内で良い?
-/**
- * Web用カテゴリーAPI
- */
-Route::get("/api/web-categories", [CategoryApiController::class, "index"]);
 
 /**
- * Todoアプリメインページ
- */
-Route::get("/todos", [TodoController::class, "index"])->name("todos.index");
-
-/**
- * ダッシュボードリダイレクト
- */
-Route::get("/dashboard", function () {
-    return redirect()->route("todos.index", ["view" => "today"]);
-})
-    ->middleware(["auth"])
-    ->name("dashboard");
-
-/**
- * 認証が必要なルートグループ
+ * API Web routes for authentication-requiring features
  */
 Route::middleware(["auth"])->group(function () {
     /**
-     * Todoルート
+     * Todo routes
      */
-    // タスク操作
+    // Trash related
+    Route::get("/todos/trash", [TodoController::class, "trashed"])->name(
+        "todos.trashed"
+    );
+
+    Route::delete("/todos/trash/empty", [
+        TodoController::class,
+        "emptyTrash",
+    ])->name("todos.trash.empty");
+
+    // Task operations
     Route::post("/todos", [TodoController::class, "store"])->name(
         "todos.store"
     );
@@ -142,12 +95,21 @@ Route::middleware(["auth"])->group(function () {
         "toggle",
     ])->name("todos.toggle");
 
+    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])->name(
+        "todos.trash"
+    );
+
+    Route::patch("/todos/{todo}/restore", [
+        TodoController::class,
+        "restore",
+    ])->name("todos.restore");
+
     Route::delete("/todos/{todo}", [TodoController::class, "destroy"])->name(
         "todos.destroy"
     );
 
     /**
-     * カテゴリールート
+     * Category routes
      */
     Route::get("/categories", [CategoryController::class, "index"])->name(
         "categories.index"
@@ -167,9 +129,8 @@ Route::middleware(["auth"])->group(function () {
         "destroy",
     ])->name("categories.destroy");
 
-    // @Todo Profileへのリンクを作る。→UserNameにリンクをつける。ログアウト機能はProfileへ
     /**
-     * プロフィールルート
+     * Profile routes
      */
     Route::get("/profile", [ProfileController::class, "edit"])->name(
         "profile.edit"
@@ -183,9 +144,8 @@ Route::middleware(["auth"])->group(function () {
         "profile.destroy"
     );
 
-    // @Todo apiなのにweb.php内で良い?
     /**
-     * メモリスト部分ビュー取得API
+     * API for memo listing
      */
     Route::get("/api/memos-partial", function () {
         $memos = Auth::user()
@@ -196,11 +156,11 @@ Route::middleware(["auth"])->group(function () {
             ->orderBy("created_at", "desc")
             ->get();
 
-        return view("layouts.partials.memo-list", compact("memos"));
+        return response()->json($memos);
     });
 
     /**
-     * カテゴリーAPI
+     * Category API
      */
     Route::post("/api/categories", [
         CategoryApiController::class,

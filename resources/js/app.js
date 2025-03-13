@@ -1,132 +1,92 @@
-// Vueアプリ初期化とグローバル編集関数設定
-
 import "./bootstrap";
 
-import Alpine from "alpinejs";
 import { createApp } from "vue";
+import router from "./router";
+import AppLayout from "./layouts/AppLayout.vue";
+
+// Import custom directive
+import { vTodoApp } from "./directives/todoApp";
+
+// Import existing components
 import TodoApp from "./components/TodoApp.vue";
+import TodoList from "./components/TodoList.vue";
+import TodoCalendar from "./components/TodoCalendar.vue";
+import TaskModal from "./components/TaskModal.vue";
+import DateNavigation from "./components/DateNavigation.vue";
+import MonthNavigation from "./components/MonthNavigation.vue";
+import DeleteConfirmModal from "./components/DeleteConfirmModal.vue";
+import EmptyState from "./components/EmptyState.vue";
+import TaskItem from "./components/TaskItem.vue";
+import TaskStats from "./components/TaskStats.vue";
+import AppHeader from "./components/AppHeader.vue";
+import LegacyTodoAppWrapper from "./components/LegacyTodoAppWrapper.vue";
 
-window.Alpine = Alpine;
-Alpine.start();
+// Import new navigation components
+import SidebarNavigation from "./components/navigation/SidebarNavigation.vue";
+import UserDropdown from "./components/navigation/UserDropdown.vue";
+import QuickInputSection from "./components/navigation/QuickInputSection.vue";
+import MemoList from "./components/navigation/MemoList.vue";
 
-// Vueアプリを初期化（todo-app要素が存在する場合）
-if (document.getElementById("todo-app")) {
-    const app = createApp(TodoApp);
-    const vm = app.mount("#todo-app");
+// Create Vue application
+const app = createApp(AppLayout);
 
-    // Vueコンポーネント外からタスク編集するためのグローバル関数定義
-    window.editTodo = function (taskIdOrData, todoData = null) {
-        console.log("Global editTodo called with:", taskIdOrData, todoData);
+// Use Vue Router
+app.use(router);
 
-        // HTMLデータ属性からtodoDataが渡された場合の処理
-        if (todoData && typeof todoData === "object") {
-            console.log("Using todoData from second parameter:", todoData);
+// Register custom directive
+app.directive("todo-app", vTodoApp);
 
-            // Try to directly call the openEditTaskModal function with the todoData object
-            if (vm && typeof vm.openEditTaskModal === "function") {
-                if (!todoData.id && taskIdOrData) {
-                    todoData.id = Number(taskIdOrData);
-                }
-                vm.openEditTaskModal(todoData);
-                return;
-            }
+// Register components globally to ensure they're available throughout the app
+// Todo components
+app.component("TodoApp", TodoApp);
+app.component("TodoList", TodoList);
+app.component("TodoCalendar", TodoCalendar);
+app.component("TaskModal", TaskModal);
+app.component("DateNavigation", DateNavigation);
+app.component("MonthNavigation", MonthNavigation);
+app.component("DeleteConfirmModal", DeleteConfirmModal);
+app.component("EmptyState", EmptyState);
+app.component("TaskItem", TaskItem);
+app.component("TaskStats", TaskStats);
+app.component("AppHeader", AppHeader);
+app.component("LegacyTodoAppWrapper", LegacyTodoAppWrapper);
 
-            // Fallback to event dispatch
-            const event = new CustomEvent("edit-todo", {
-                detail: { id: Number(taskIdOrData), data: todoData },
-            });
-            document.getElementById("todo-app").dispatchEvent(event);
-            return;
-        }
+// Navigation components
+app.component("SidebarNavigation", SidebarNavigation);
+app.component("UserDropdown", UserDropdown);
+app.component("QuickInputSection", QuickInputSection);
+app.component("MemoList", MemoList);
 
-        if (!taskIdOrData) {
-            console.error("No task ID or data provided to editTodo");
-            return;
-        }
+// Mount the application
+app.mount("#app");
 
+// Make the router available globally for components outside Vue instance
+window.vueRouter = router;
+
+// Save the original editTodo function if it exists
+const originalEditTodo = window.editTodo;
+
+// Provide enhanced editTodo function globally for backward compatibility
+window.editTodo = function (taskIdOrData, todoData = null) {
+    console.log("Global editTodo called:", taskIdOrData, todoData);
+
+    // Try to use the original function first if it exists
+    if (typeof originalEditTodo === "function") {
         try {
-            // Use a direct ID if one is provided
-            if (
-                typeof taskIdOrData === "number" ||
-                (typeof taskIdOrData === "string" &&
-                    !isNaN(parseInt(taskIdOrData)))
-            ) {
-                const id = Number(taskIdOrData);
-
-                // Try to directly call the fetchAndEditTask function if available
-                if (vm && typeof vm.fetchAndEditTask === "function") {
-                    console.log(
-                        "Directly calling fetchAndEditTask with ID:",
-                        id,
-                    );
-                    vm.fetchAndEditTask(id);
-                    return;
-                }
-
-                // Fallback to event dispatch
-                console.log("Dispatching edit-todo event with ID:", id);
-                const event = new CustomEvent("edit-todo", {
-                    detail: { id, data: null },
-                });
-                document.getElementById("todo-app").dispatchEvent(event);
-                return;
-            }
-
-            // Use object data if provided
-            if (typeof taskIdOrData === "object" && taskIdOrData !== null) {
-                // openEditTaskModal関数が利用可能な場合の直接呼び出し
-                if (vm && typeof vm.openEditTaskModal === "function") {
-                    console.log(
-                        "Directly calling openEditTaskModal with object:",
-                        taskIdOrData,
-                    );
-                    vm.openEditTaskModal(taskIdOrData);
-                    return;
-                }
-                // イベントディスパッチによるフォールバック処理
-                const detail = taskIdOrData.id
-                    ? { id: Number(taskIdOrData.id), data: taskIdOrData }
-                    : { id: null, data: taskIdOrData };
-
-                console.log("Dispatching edit-todo event with detail:", detail);
-                const event = new CustomEvent("edit-todo", { detail });
-                document.getElementById("todo-app").dispatchEvent(event);
-                return;
-            }
-
-            console.error("Invalid task data format:", taskIdOrData);
-        } catch (error) {
-            console.error("Error in editTodo function:", error);
-            alert("タスクの編集中にエラーが発生しました");
+            return originalEditTodo(taskIdOrData, todoData);
+        } catch (e) {
+            console.error("Error in original editTodo:", e);
         }
-    };
-}
-
-// Vueコンポーネント外のボタン用イベントリスナー
-document.addEventListener("DOMContentLoaded", function () {
-    // 従来のHTML内の編集ボタンクリックハンドラー追加
-    const editButtons = document.querySelectorAll(".edit-task-btn");
-
-    if (editButtons.length > 0) {
-        console.log(
-            "Found",
-            editButtons.length,
-            "edit buttons to attach handlers to",
-        );
-
-        editButtons.forEach((button) => {
-            button.addEventListener("click", function (e) {
-                e.preventDefault();
-                const taskId = this.getAttribute("data-task-id");
-                if (taskId) {
-                    console.log("Edit button clicked for task ID:", taskId);
-                    window.editTodo(Number(taskId));
-                } else {
-                    console.error("No task ID found on button:", this);
-                }
-            });
-        });
-    } else {
-        console.log("No edit buttons found on page");
     }
+
+    // Fallback to event-based approach
+    const event = new CustomEvent("edit-todo", {
+        detail: { id: taskIdOrData, data: todoData },
+    });
+    document.dispatchEvent(event);
+};
+
+// Listen for popstate events to handle browser back/forward buttons with Vue Router
+window.addEventListener("popstate", () => {
+    router.go(0); // This forces router to re-evaluate the current URL
 });

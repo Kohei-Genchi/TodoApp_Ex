@@ -596,10 +596,8 @@ export default {
                     // 既存のタスクを更新
                     response = await TodoApi.updateTask(taskId, preparedData);
 
-                    // メモリストからタスクに日付を追加している場合、メモリストをすぐに更新
-                    if (isAddingDueDateToMemo) {
-                        await refreshMemoList();
-                    }
+                    // Always refresh memo list when a task is updated
+                    await refreshMemoList();
                 }
 
                 closeTaskModal();
