@@ -11,33 +11,32 @@ class Todo extends Model
     use HasFactory;
 
     // 状態定数
-    const STATUS_PENDING = 'pending';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_TRASHED = 'trashed';
+    const STATUS_PENDING = "pending";
+    const STATUS_COMPLETED = "completed";
 
     // 場所定数
-    const LOCATION_INBOX = 'INBOX';
-    const LOCATION_TODAY = 'TODAY';
-    const LOCATION_SCHEDULED = 'SCHEDULED';
-    const LOCATION_TEMPLATE = 'TEMPLATE';
+    const LOCATION_INBOX = "INBOX";
+    const LOCATION_TODAY = "TODAY";
+    const LOCATION_SCHEDULED = "SCHEDULED";
+    const LOCATION_TEMPLATE = "TEMPLATE";
 
     protected $fillable = [
-        'title',
-        'description',
-        'due_date',
-        'due_time',
-        'status',
-        'location',
-        'user_id',
-        'category_id',
-        'recurrence_type',
-        'recurrence_end_date',
+        "title",
+        "description",
+        "due_date",
+        "due_time",
+        "status",
+        "location",
+        "user_id",
+        "category_id",
+        "recurrence_type",
+        "recurrence_end_date",
     ];
 
     protected $casts = [
-        'due_date' => 'date',
-        'due_time' => 'datetime',
-        'recurrence_end_date' => 'date',
+        "due_date" => "date",
+        "due_time" => "datetime",
+        "recurrence_end_date" => "date",
     ];
 
     public function user(): BelongsTo
@@ -50,9 +49,8 @@ class Todo extends Model
         return $this->belongsTo(Category::class);
     }
 
-
     public function isRecurring(): bool
     {
-        return $this->recurrence_type !== 'none';
+        return $this->recurrence_type !== "none";
     }
 }

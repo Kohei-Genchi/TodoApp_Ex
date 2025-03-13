@@ -128,16 +128,6 @@ Route::middleware(["auth"])->group(function () {
     /**
      * Todoルート
      */
-    // ゴミ箱関連
-    Route::get("/todos/trash", [TodoController::class, "trashed"])->name(
-        "todos.trashed"
-    );
-
-    Route::delete("/todos/trash/empty", [
-        TodoController::class,
-        "emptyTrash",
-    ])->name("todos.trash.empty");
-
     // タスク操作
     Route::post("/todos", [TodoController::class, "store"])->name(
         "todos.store"
@@ -151,15 +141,6 @@ Route::middleware(["auth"])->group(function () {
         TodoController::class,
         "toggle",
     ])->name("todos.toggle");
-
-    Route::patch("/todos/{todo}/trash", [TodoController::class, "trash"])->name(
-        "todos.trash"
-    );
-
-    Route::patch("/todos/{todo}/restore", [
-        TodoController::class,
-        "restore",
-    ])->name("todos.restore");
 
     Route::delete("/todos/{todo}", [TodoController::class, "destroy"])->name(
         "todos.destroy"

@@ -121,17 +121,7 @@
                     ]) }})"
                     style="border-left: 3px solid {{ $memo->category ? $memo->category->color : '#6B7280' }}">
                     <div class="flex items-center justify-between">
-                    <div class="text-sm truncate pr-1">{{ $memo->title }}</div>
-                    <div class="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                    <!-- Replace form with button that calls JavaScript -->
-                    <button type="button"
-                    onclick="event.stopPropagation(); trashMemo({{ $memo->id }})"
-                    class="text-gray-400 hover:text-gray-200">
-                    <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    </button>
-                    </div>
+                    <div class="text-sm truncate">{{ $memo->title }}</div>
                     </div>
                     @if($memo->category)
                     <div class="text-xs text-gray-400 mt-0.5 flex items-center">
@@ -152,59 +142,32 @@
                     @endauth
                     </div>
                     <script>
-                    // Function to trash a memo using the API
-                    function trashMemo(id) {
-                    // Create a form and submit it via POST
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = `/todos/${id}/trash`;
+                    // Toggle user dropdown visibility
+                    function toggleUserDropdown() {
+                        const dropdown = document.getElementById('userDropdown');
+                        dropdown.classList.toggle('hidden');
+                    }
 
-            // Add CSRF token
-            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = csrfToken;
-            form.appendChild(csrfInput);
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', function(event) {
+                    const userMenu = document.querySelector('.relative.mb-6');
+                    const dropdown = document.querySelector('#user-dropdown'); // Update this selector to match your actual dropdown ID
 
-            // Add method override for PATCH
-            const methodInput = document.createElement('input');
-            methodInput.type = 'hidden';
-            methodInput.name = '_method';
-            methodInput.value = 'PATCH';
-            form.appendChild(methodInput);
+                    if (dropdown && userMenu &&
+                        !dropdown.contains(event.target) &&
+                        !userMenu.contains(event.target)) {
+                        dropdown.classList.add('hidden');
+                    }
+                    });
 
-            // Append form to document and submit
-            document.body.appendChild(form);
-            form.submit();
-            }
-
-            // Toggle user dropdown visibility
-            function toggleUserDropdown() {
-                const dropdown = document.getElementById('userDropdown');
-                dropdown.classList.toggle('hidden');
-            }
-
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function(event) {
-            const userMenu = document.querySelector('.relative.mb-6');
-            const dropdown = document.querySelector('#user-dropdown'); // Update this selector to match your actual dropdown ID
-
-            if (dropdown && userMenu &&
-                !dropdown.contains(event.target) &&
-                !userMenu.contains(event.target)) {
-                dropdown.classList.add('hidden');
-            }
-            });
-
-            // Function to confirm logout
-            function confirmLogout() {
-                if (confirm('ログアウトしてもよろしいですか？')) {
-                    document.getElementById('logout-form').submit();
-                }
-            }
-            </script>
-            </nav>
+                    // Function to confirm logout
+                    function confirmLogout() {
+                        if (confirm('ログアウトしてもよろしいですか？')) {
+                            document.getElementById('logout-form').submit();
+                        }
+                    }
+                    </script>
+                    </nav>
 
 
 <style>

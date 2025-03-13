@@ -31,10 +31,6 @@ Route::prefix("todos")
         // タスク作成
         Route::post("/", [TodoController::class, "store"]);
 
-        // ゴミ箱関連
-        Route::get("/trashed", [TodoController::class, "trashedApi"]);
-        Route::delete("/trash/empty", [TodoController::class, "emptyTrash"]);
-
         // 個別タスク操作
         Route::get("/{todo}", [TodoController::class, "show"]);
 
@@ -46,8 +42,6 @@ Route::prefix("todos")
 
         // タスクステータス操作
         Route::patch("/{todo}/toggle", [TodoController::class, "toggle"]);
-        Route::patch("/{todo}/trash", [TodoController::class, "trash"]);
-        Route::patch("/{todo}/restore", [TodoController::class, "restore"]);
         Route::delete("/{todo}", [TodoController::class, "destroy"]);
     });
 

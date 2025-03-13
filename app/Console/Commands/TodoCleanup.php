@@ -42,15 +42,13 @@ class TodoCleanup extends Command
         }
 
         try {
-            // 完了したタスクをゴミ箱に移動
+            // 完了したタスクを削除
             $completedCount = Todo::where("status", "completed")
                 ->where("location", "TODAY") // TODAY条件を追加
                 ->whereDate("due_date", $targetDate)
-                ->update(["status" => "trashed"]);
+                ->delete();
 
-            $this->info(
-                "完了タスク {$completedCount} 件をゴミ箱に移動しました"
-            );
+            $this->info("完了タスク {$completedCount} 件を削除しました");
 
             // 未完了タスクをINBOXに戻す
             $pendingCount = Todo::where("status", "pending")
@@ -62,10 +60,10 @@ class TodoCleanup extends Command
                     "due_time" => null,
                 ]);
 
-            $this->info("未完了タスク {$pendingCount} 件をMEMOに戻しました");
+            $this->info("未完了タスク {$pendingCount} 件をINBOXに戻しました");
 
             Log::info(
-                "Todoタスク整理: 完了タスク {$completedCount} 件をゴミ箱に移動、未完了タスク {$pendingCount} 件をMEMOに戻しました"
+                "Todoタスク整理: 完了タスク {$completedCount} 件を削除、未完了タスク {$pendingCount} 件をINBOXに戻しました"
             );
 
             return Command::SUCCESS;
