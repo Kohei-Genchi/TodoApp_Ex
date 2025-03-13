@@ -1,44 +1,22 @@
+// In resources/js/router/index.js
 import { createRouter, createWebHistory } from "vue-router";
 
-// Import page components
+// Define route components
+// Using dynamic imports for lazy loading
 const Dashboard = () => import("../components/pages/Dashboard.vue");
-const Profile = () => import("../components/pages/Profile.vue");
-const Subscription = () => import("../components/pages/Subscription.vue");
 const TodoView = () => import("../components/pages/TodoView.vue");
 
-// Define routes
+// Define routes - only include routes that are handled by Vue
 const routes = [
     {
         path: "/",
         name: "home",
         redirect: "/todos",
-        meta: {
-            title: "Home",
-        },
     },
     {
         path: "/dashboard",
         name: "dashboard",
         component: Dashboard,
-        meta: {
-            title: "Dashboard",
-        },
-    },
-    {
-        path: "/profile",
-        name: "profile",
-        component: Profile,
-        meta: {
-            title: "Profile",
-        },
-    },
-    {
-        path: "/subscription",
-        name: "subscription",
-        component: Subscription,
-        meta: {
-            title: "Subscription",
-        },
     },
     {
         path: "/todos",
@@ -48,7 +26,6 @@ const routes = [
             title: "Todo List",
         },
     },
-    // Additional todo routes that should all use the TodoView component
     {
         path: "/todos/today",
         name: "todos.today",
@@ -67,26 +44,29 @@ const routes = [
             view: "calendar",
         },
     },
-    {
-        path: "/todos/trash",
-        name: "todos.trash",
-        component: TodoView,
-        meta: {
-            title: "Trash",
-            view: "trash",
-        },
-    },
 ];
 
-// Create router instance
+// Create router instance with a custom scrollBehavior function
 const router = createRouter({
     history: createWebHistory(),
     routes,
+    scrollBehavior(to, from, savedPosition) {
+        if (savedPosition) {
+            return savedPosition;
+        } else {
+            return { top: 0 };
+        }
+    },
 });
 
-// Title update hook
+// Update page title when route changes
 router.beforeEach((to, from, next) => {
+    // Set page title
     document.title = to.meta.title ? `${to.meta.title} - Todo App` : "Todo App";
+
+    // Log navigation for debugging
+    console.log(`Navigating from ${from.path} to ${to.path}`);
+
     next();
 });
 

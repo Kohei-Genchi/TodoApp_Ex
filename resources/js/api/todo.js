@@ -1,13 +1,9 @@
-/**
- * Todo API クライアント
- *
- * タスク管理に関するすべてのAPI操作を処理する
- */
+// In resources/js/api/todo.js
 import axios from "axios";
 
 /**
- * 共通のリクエストヘッダーを生成
- * @returns {Object} 共通ヘッダー
+ * Common headers for API requests
+ * @returns {Object} Headers object
  */
 const getCommonHeaders = () => ({
     Accept: "application/json",
@@ -15,8 +11,8 @@ const getCommonHeaders = () => ({
 });
 
 /**
- * CSRF保護されたリクエストヘッダーを生成
- * @returns {Object} CSRF保護されたヘッダー
+ * CSRF protected request headers
+ * @returns {Object} Headers object with CSRF token
  */
 const getCsrfHeaders = () => {
     const csrfToken = document
@@ -24,7 +20,7 @@ const getCsrfHeaders = () => {
         ?.getAttribute("content");
 
     if (!csrfToken) {
-        console.warn("CSRF tokenが見つかりません");
+        console.warn("CSRF token not found");
     }
 
     return {
@@ -35,10 +31,10 @@ const getCsrfHeaders = () => {
 };
 
 /**
- * IDの有効性を検証
- * @param {number|string} id 検証するID
- * @param {string} methodName 呼び出し元メソッド名（エラーメッセージ用）
- * @returns {boolean} IDが有効かどうか
+ * Validate task ID
+ * @param {number} id Task ID
+ * @param {string} methodName Method name for error message
+ * @returns {boolean} True if valid
  */
 const validateId = (id, methodName) => {
     if (id === undefined || id === null) {
@@ -50,12 +46,13 @@ const validateId = (id, methodName) => {
 
 export default {
     /**
-     * ビューと日付に基づいてタスク一覧を取得
-     * @param {string} view ビュータイプ（today, scheduled, inbox, calendar, date）
-     * @param {string} date 日付（YYYY-MM-DD形式）
-     * @returns {Promise} APIレスポンス
+     * Get tasks based on view and date
+     * @param {string} view View type (today, inbox, calendar, etc)
+     * @param {string} date Date in YYYY-MM-DD format
+     * @returns {Promise} API response
      */
     getTasks(view, date) {
+        console.log(`API: Getting tasks for view=${view}, date=${date}`);
         return axios.get("/api/todos", {
             params: { view, date },
             headers: getCommonHeaders(),
@@ -63,57 +60,77 @@ export default {
     },
 
     /**
-     * 特定のタスクをIDで取得
-     * @param {number} id タスクID
-     * @returns {Promise} APIレスポンス
+     * Get trashed tasks
+     * @returns {Promise} API response
+     */
+    getTrashedTodos() {
+        console.log("API: Getting trashed todos");
+        return axios.get("/api/todos", {
+            params: { view: "trash" },
+            headers: getCommonHeaders(),
+        });
+    },
+
+    /**
+     * Empty trash
+     * @returns {Promise} API response
+     */
+    emptyTrash() {
+        console.log("API: Emptying trash");
+        return axios.delete("/api/todos/trash/empty", {
+            headers: getCsrfHeaders(),
+        });
+    },
+
+    /**
+     * Get task by ID
+     * @param {number} id Task ID
+     * @returns {Promise} API response
      */
     getTaskById(id) {
         validateId(id, "getTaskById");
+        console.log(`API: Getting task with ID ${id}`);
         return axios.get(`/api/todos/${id}`, {
             headers: getCommonHeaders(),
         });
     },
 
     /**
-     * 新しいタスクを作成
-     * @param {Object} taskData タスクデータ
-     * @returns {Promise} APIレスポンス
+     * Create a new task
+     * @param {Object} taskData Task data
+     * @returns {Promise} API response
      */
     createTask(taskData) {
+        console.log("API: Creating new task", taskData);
         return axios.post("/api/todos", taskData, {
             headers: getCsrfHeaders(),
         });
     },
 
     /**
-     * 既存のタスクを更新
-     * @param {number} id タスクID
-     * @param {Object} taskData 更新するタスクデータ
-     * @returns {Promise} APIレスポンス
+     * Update an existing task
+     * @param {number} id Task ID
+     * @param {Object} taskData Updated task data
+     * @returns {Promise} API response
      */
     updateTask(id, taskData) {
         validateId(id, "updateTask");
+        console.log(`API: Updating task ${id}`, taskData);
 
-        // Laravel用のPUT操作（POST + _method）
-        return axios.post(
-            `/api/todos/${id}`,
-            {
-                ...taskData,
-                _method: "PUT",
-            },
-            {
-                headers: getCsrfHeaders(),
-            },
-        );
+        // Use PUT for RESTful update
+        return axios.put(`/api/todos/${id}`, taskData, {
+            headers: getCsrfHeaders(),
+        });
     },
 
     /**
-     * タスクの完了状態を切り替え
-     * @param {number} id タスクID
-     * @returns {Promise} APIレスポンス
+     * Toggle task status
+     * @param {number} id Task ID
+     * @returns {Promise} API response
      */
     toggleTask(id) {
         validateId(id, "toggleTask");
+        console.log(`API: Toggling task ${id}`);
         return axios.patch(
             `/api/todos/${id}/toggle`,
             {},
@@ -124,13 +141,48 @@ export default {
     },
 
     /**
-     * タスクを完全に削除
-     * @param {number} id タスクID
-     * @param {boolean} deleteRecurring 繰り返しタスクも削除するかどうか
-     * @returns {Promise} APIレスポンス
+     * Trash a task
+     * @param {number} id Task ID
+     * @returns {Promise} API response
+     */
+    trashTask(id) {
+        validateId(id, "trashTask");
+        console.log(`API: Trashing task ${id}`);
+        return axios.patch(
+            `/api/todos/${id}/trash`,
+            {},
+            {
+                headers: getCsrfHeaders(),
+            },
+        );
+    },
+
+    /**
+     * Restore a trashed task
+     * @param {number} id Task ID
+     * @returns {Promise} API response
+     */
+    restoreTask(id) {
+        validateId(id, "restoreTask");
+        console.log(`API: Restoring task ${id}`);
+        return axios.patch(
+            `/api/todos/${id}/restore`,
+            {},
+            {
+                headers: getCsrfHeaders(),
+            },
+        );
+    },
+
+    /**
+     * Delete a task permanently
+     * @param {number} id Task ID
+     * @param {boolean} deleteRecurring Whether to delete recurring instances
+     * @returns {Promise} API response
      */
     deleteTask(id, deleteRecurring = false) {
         validateId(id, "deleteTask");
+        console.log(`API: Deleting task ${id}, recurring=${deleteRecurring}`);
         return axios.delete(`/api/todos/${id}`, {
             headers: getCsrfHeaders(),
             params: { delete_recurring: deleteRecurring ? 1 : 0 },

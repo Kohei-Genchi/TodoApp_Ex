@@ -1,4 +1,4 @@
-// Import bootstrap for the base setup
+// In resources/js/app.js
 import "./bootstrap";
 
 // Import Alpine.js
@@ -6,8 +6,12 @@ import Alpine from "alpinejs";
 window.Alpine = Alpine;
 Alpine.start();
 
-// Import Vue and components
+// Import Vue and Vue Router
 import { createApp } from "vue";
+import { createRouter, createWebHistory } from "vue-router";
+import router from "./router"; // Import router configuration
+
+// Import components
 import TodoApp from "./components/TodoApp.vue";
 import SidebarNavigation from "./components/navigation/SidebarNavigation.vue";
 
@@ -23,6 +27,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (todoAppElement) {
         console.log("Found #todo-app element, mounting Vue application");
         const app = createApp(TodoApp);
+
+        // Use Vue Router with the app
+        app.use(router);
+
         const vm = app.mount("#todo-app");
         console.log("Vue app mounted successfully");
 
@@ -164,6 +172,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const sidebarApp = createApp(SidebarNavigation, {
             currentRoute: window.location.pathname,
         });
+
+        // Use Vue Router with the sidebar app
+        sidebarApp.use(router);
 
         sidebarApp.mount("#sidebar-nav");
         console.log("Vue sidebar mounted successfully");

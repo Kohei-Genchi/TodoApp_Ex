@@ -1,3 +1,4 @@
+// In resources/js/components/navigation/SidebarNavigation.vue
 <template>
     <nav
         class="bg-gray-800 text-white h-full w-64 fixed left-0 top-0 overflow-y-auto"
@@ -43,15 +44,15 @@
                     </svg>
                 </div>
 
-                <!-- Dropdown Menu -->
                 <div
                     v-if="showUserDropdown"
                     class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg z-10 border border-gray-600"
                 >
                     <div class="py-1">
-                        <router-link
-                            to="/"
-                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                        <!-- Home - Using regular anchor for server-rendered pages -->
+                        <a
+                            href="/"
+                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -68,10 +69,12 @@
                                 />
                             </svg>
                             Home
-                        </router-link>
-                        <router-link
-                            to="/profile"
-                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                        </a>
+
+                        <!-- Profile - Using regular anchor -->
+                        <a
+                            href="/profile"
+                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -88,10 +91,12 @@
                                 />
                             </svg>
                             Profile
-                        </router-link>
-                        <router-link
-                            to="/subscription"
-                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
+                        </a>
+
+                        <!-- Subscription - Using regular anchor -->
+                        <a
+                            href="/stripe/subscription"
+                            class="flex items-center px-4 py-2 text-sm text-gray-200 hover:bg-gray-600 block"
                         >
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
@@ -114,7 +119,9 @@
                                 />
                             </svg>
                             Subscription
-                        </router-link>
+                        </a>
+
+                        <!-- Logout button -->
                         <button
                             @click="logout"
                             class="flex items-center w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-gray-600"
@@ -298,7 +305,7 @@
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, onBeforeUnmount } from "vue";
 import axios from "axios";
 
 export default {
@@ -311,7 +318,7 @@ export default {
         },
     },
 
-    setup(props, { emit }) {
+    setup(props) {
         // User state
         const user = ref(window.Laravel?.user || null);
         const showUserDropdown = ref(false);
@@ -322,8 +329,11 @@ export default {
 
         // Check if current page is profile or subscription
         const isProfileOrSubscriptionPage = computed(() => {
-            const route = props.currentRoute;
-            return route.includes("profile") || route.includes("subscription");
+            const currentPath = window.location.pathname;
+            return (
+                currentPath.includes("profile") ||
+                currentPath.includes("subscription")
+            );
         });
 
         // Toggle user dropdown
@@ -378,18 +388,32 @@ export default {
 
         // Edit memo
         const editMemo = (memo) => {
-            emit("edit-memo", memo);
+            // Call global editTodo function if available
+            if (window.editTodo) {
+                window.editTodo(memo.id, memo);
+            } else {
+                console.warn("editTodo function not available");
+            }
         };
 
         // Trash memo
         const trashMemo = async (id) => {
             try {
-                await axios.patch(`/api/todos/${id}/trash`, {});
+                // Call the delete function directly
+                if (
+                    window.todoAppInstance &&
+                    window.todoAppInstance.deleteTodo
+                ) {
+                    window.todoAppInstance.deleteTodo(id);
+                } else {
+                    // Fallback to direct API call
+                    await axios.delete(`/api/todos/${id}`);
+                }
 
                 // Remove from local state
                 memos.value = memos.value.filter((memo) => memo.id !== id);
             } catch (error) {
-                console.error("Error trashing memo:", error);
+                console.error("Error deleting memo:", error);
             }
         };
 
@@ -434,6 +458,15 @@ export default {
         onMounted(() => {
             document.addEventListener("click", handleClickOutside);
             loadMemos();
+
+            // Listen for task updated events to refresh memo list
+            window.addEventListener("task-updated", loadMemos);
+        });
+
+        // Clean up event listeners
+        onBeforeUnmount(() => {
+            document.removeEventListener("click", handleClickOutside);
+            window.removeEventListener("task-updated", loadMemos);
         });
 
         return {
